@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeetCode Speed Prep — System Design Guide</title>
+  <link rel="stylesheet" href="../styles/main.css" />
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="../index.html">⚡ System<span>Design</span></a>
+  <div class="nav-links">
+    <a href="../01-fundamentals/index.html">Fundamentos</a>
+    <a href="../02-components/index.html">Componentes</a>
+    <a href="../03-patterns/index.html">Patrones</a>
+    <a href="../04-databases/index.html">Bases de Datos</a>
+    <a href="../05-apis/index.html">APIs</a>
+    <a href="../06-case-studies/index.html">Casos Reales</a>
+    <a href="../07-infrastructure/index.html">Infraestructura</a>
+    <a href="../08-interview-prep/index.html">Entrevistas</a>
+    <a href="../09-resources/index.html">Recursos</a>
+    <a href="../10-advanced-topics/index.html">Avanzado</a>
+    <a href="../11-security/index.html">🔐 Seguridad</a>
+    <a href="../12-search/index.html">🔍 Search</a>
+    <a href="../13-soft-skills/index.html">🎭 Soft Skills</a>
+    <a href="../14-leetcode/index.html" class="active">⚡ LeetCode</a>
+    <a href="../15-ai-engineering/index.html">🤖 AI Eng</a>
+    <a href="../16-token-optimization/index.html">🪙 Tokens</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / LeetCode Speed Prep</div>
+  <h1>⚡ LeetCode Speed Prep</h1>
+  <p>Los 20 problemas Easy más frecuentes resueltos con patrones memorizables. Meta: completarlos todos en menos de 40 minutos.</p>
+  <div class="hero-badges">
+    <span class="badge">20 Problemas</span>
+    <span class="badge">10 Patrones</span>
+    <span class="badge">Plan 7 Días</span>
+    <span class="badge">Meta: Sub-40 min</span>
+  </div>
+</div>
+
+<main>
+
+  <!-- REGLA OPERATIVA -->
+  <div class="callout callout-warning">
+    <strong>Regla operativa:</strong> En este challenge importa el throughput. Si la idea no aparece en 20–30 segundos, activá el patrón memorizado. Si el código ya pasa, no lo embellezcas. Si falla un test, corregí el bug puntual y seguí. Usá nombres cortos y escritura continua.
+  </div>
+
+  <!-- PATRONES -->
+  <div class="section-title">Los 10 Patrones Base</div>
+  <p class="section-subtitle">Estos patrones cubren el 100% de los 20 problemas. Memorizalos hasta poder reescribirlos sin mirar.</p>
+
+  <div class="grid grid-2">
+
+    <div class="card">
+      <span class="card-icon">🔁</span>
+      <h3>1 · Doble For Directo</h3>
+      <p><strong>Cuándo:</strong> array chico, solución obvia y segura, prioridad en entender rápido.<br/>
+      <strong>Idea:</strong> agarro un número, lo comparo con todos los que están después.</p>
+      <pre class="diagram">for (let i = 0; i &lt; nums.length; i++) {
+  for (let j = i + 1; j &lt; nums.length; j++) {
+    if (nums[i] + nums[j] === target) return [i, j];
+  }
+}</pre>
+    </div>
+
+    <div class="card">
+      <span class="card-icon">🗺️</span>
+      <h3>2 · Map / Complemento</h3>
+      <p><strong>Cuándo:</strong> necesitás saber si ya viste un valor, "buscar complemento".<br/>
+      <strong>Idea:</strong> guardo lo que vi; para el actual pregunto si lo que falta ya apareció.</p>
+      <pre class="diagram">const vistos = new Map();
+for (let i = 0; i &lt; nums.length; i++) {
+  const falta = target - nums[i];
+  if (vistos.has(falta)) return [vistos.get(falta), i];
+  vistos.set(nums[i], i);
+}</pre>
+    </div>
+
+    <div class="card">
+      <span class="card-icon">📚</span>
+      <h3>3 · Stack (Pila)</h3>
+      <p><strong>Cuándo:</strong> paréntesis, abrir/cerrar, LIFO.<br/>
+      <strong>Idea:</strong> si abro, guardo; si cierro, tiene que coincidir con lo último abierto.</p>
+      <pre class="diagram">const pares = { ")": "(", "]": "[", "}": "{" };
+const pila = [];
+for (const c of s) {
+  if ("([{".includes(c)) pila.push(c);
+  else if (pila.pop() !== pares[c]) return false;
+}
+return pila.length === 0;</pre>
+    </div>
+
+    <div class="card">
+      <span class="card-icon">🎯</span>
+      <h3>4 · Binary Search</h3>
+      <p><strong>Cuándo:</strong> array ordenado, encontrar posición, partir por la mitad.<br/>
+      <strong>Idea:</strong> miro el medio; si es chico me voy a la derecha, si alcanza me quedo.</p>
+      <pre class="diagram">let l = 0, r = nums.length;
+while (l &lt; r) {
+  const m = Math.floor((l + r) / 2);
+  if (nums[m] &lt; target) l = m + 1;
+  else r = m;
+}
+return l;</pre>
+    </div>
+
+    <div class="card">
+      <span class="card-icon">🔤</span>
+      <h3>5 · Linear String Scan</h3>
+      <p><strong>Cuándo:</strong> sumar valores, comparar con el siguiente, contar letras.<br/>
+      <strong>Idea:</strong> voy letra por letra, decido en cada paso, acumulo la respuesta.</p>
+      <pre class="diagram">let resultado = 0;
+for (let i = 0; i &lt; s.length; i++) {
+  // comparar s[i] con s[i+1] si necesitás lookahead
+  resultado += valorDe(s[i]);
+}
+return resultado;</pre>
+    </div>
+
+    <div class="card">
+      <span class="card-icon">👇👇</span>
+      <h3>6 · Two Pointers</h3>
+      <p><strong>Cuándo:</strong> arrays ordenados, compactar, borrar sin delete, escribir al frente.<br/>
+      <strong>Idea:</strong> un puntero recorre, el otro marca dónde escribir lo válido.</p>
+      <pre class="diagram">let write = 1;
+for (let i = 1; i &lt; nums.length; i++) {
+  if (nums[i] !== nums[i - 1]) {
+    nums[write] = nums[i];
+    write++;
+  }
+}
+return write;</pre>
+    </div>
+
+    <div class="card">
+      <span class="card-icon">🔗</span>
+      <h3>7 · Merge de Listas (Dummy Node)</h3>
+      <p><strong>Cuándo:</strong> dos listas ordenadas que hay que unir.<br/>
+      <strong>Idea:</strong> dummy node evita casos especiales al principio; siempre avanzo el menor.</p>
+      <pre class="diagram">const dummy = new ListNode(0);
+let cur = dummy;
+while (l1 &amp;&amp; l2) {
+  if (l1.val &lt; l2.val) { cur.next = l1; l1 = l1.next; }
+  else { cur.next = l2; l2 = l2.next; }
+  cur = cur.next;
+}
+cur.next = l1 || l2;
+return dummy.next;</pre>
+    </div>
+
+    <div class="card">
+      <span class="card-icon">🌳</span>
+      <h3>8 · DFS en Árboles</h3>
+      <p><strong>Cuándo:</strong> recorrer árboles, inorder/preorder/postorder.<br/>
+      <strong>Idea:</strong> función recursiva; si no hay nodo termina; procesa en el orden correcto.</p>
+      <pre class="diagram">const resultado = [];
+const dfs = (nodo) => {
+  if (!nodo) return;
+  dfs(nodo.left);         // inorder
+  resultado.push(nodo.val);
+  dfs(nodo.right);
+};
+dfs(root);
+return resultado;</pre>
+    </div>
+
+    <div class="card">
+      <span class="card-icon">🪞</span>
+      <h3>9 · Comparar Dos Árboles</h3>
+      <p><strong>Cuándo:</strong> same tree, mirror tree, verificar estructura y valores.<br/>
+      <strong>Idea:</strong> ambos null = true; uno null = false; valores distintos = false; recursión.</p>
+      <pre class="diagram">function mismoArbol(a, b) {
+  if (!a &amp;&amp; !b) return true;
+  if (!a || !b) return false;
+  if (a.val !== b.val) return false;
+  return mismoArbol(a.left, b.left)
+      &amp;&amp; mismoArbol(a.right, b.right);
+}</pre>
+    </div>
+
+    <div class="card">
+      <span class="card-icon">📈</span>
+      <h3>10 · Fibonacci / DP Mínima</h3>
+      <p><strong>Cuándo:</strong> cada respuesta depende de las dos anteriores (Climbing Stairs).<br/>
+      <strong>Idea:</strong> no necesitás guardar todo, solo las últimas dos respuestas.</p>
+      <pre class="diagram">if (n &lt;= 2) return n;
+let anterior = 1, actual = 2;
+for (let i = 3; i &lt;= n; i++) {
+  const sig = anterior + actual;
+  anterior = actual;
+  actual = sig;
+}
+return actual;</pre>
+    </div>
+
+  </div>
+
+  <!-- 20 EJERCICIOS -->
+  <div class="section-title">Los 20 Ejercicios</div>
+  <p class="section-subtitle">Organizados por categoría. Cada ficha tiene la idea mínima, el patrón, el pitfall principal y el tiempo objetivo.</p>
+
+  <!-- Arrays y Strings -->
+  <div class="concept-block">
+    <h3>📦 Arrays & Strings</h3>
+
+    <div class="grid grid-2">
+
+      <div class="card">
+        <h3><span class="tag tag-blue">Easy</span> 1 · Two Sum</h3>
+        <p><strong>Patrón:</strong> Doble for directo<br/>
+        <strong>Idea:</strong> recorrés con dos <code>for</code> y comparás pares.<br/>
+        <strong>Pitfall:</strong> arrancar <code>j</code> en <code>0</code> en vez de <code>i+1</code> hace trabajo repetido.<br/>
+        <strong>Objetivo:</strong> ≤ 90s</p>
+        <pre class="diagram">var twoSum = function(nums, target) {
+  for (let i = 0; i &lt; nums.length; i++) {
+    for (let j = i + 1; j &lt; nums.length; j++) {
+      if (nums[i] + nums[j] === target) return [i, j];
+    }
+  }
+};</pre>
+        <p style="font-style:italic; color: var(--text-muted); margin-top: 0.5rem;">"Pruebo cada número con los que tiene después. Si alguno suma el target, devuelvo sus posiciones."</p>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag tag-blue">Easy</span> 26 · Remove Duplicates from Sorted Array</h3>
+        <p><strong>Patrón:</strong> Two pointers<br/>
+        <strong>Idea:</strong> puntero lento marca la zona única, rápido explora.<br/>
+        <strong>Pitfall:</strong> arrancar mal el índice y pisar la primera posición.<br/>
+        <strong>Objetivo:</strong> ≤ 90s</p>
+        <pre class="diagram">var removeDuplicates = function(nums) {
+  let write = 1;
+  for (let i = 1; i &lt; nums.length; i++) {
+    if (nums[i] !== nums[i - 1]) {
+      nums[write] = nums[i];
+      write++;
+    }
+  }
+  return write;
+};</pre>
+        <p style="font-style:italic; color: var(--text-muted); margin-top: 0.5rem;">"Siempre que encuentro algo distinto al anterior, lo escribo en la posición del write."</p>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag tag-blue">Easy</span> 27 · Remove Element</h3>
+        <p><strong>Patrón:</strong> Two pointers / write index<br/>
+        <strong>Idea:</strong> compactás los distintos de <code>val</code> al frente.<br/>
+        <strong>Pitfall:</strong> querer borrar elementos en vez de reescribir.<br/>
+        <strong>Objetivo:</strong> ≤ 90s</p>
+        <pre class="diagram">var removeElement = function(nums, val) {
+  let write = 0;
+  for (let i = 0; i &lt; nums.length; i++) {
+    if (nums[i] !== val) {
+      nums[write] = nums[i];
+      write++;
+    }
+  }
+  return write;
+};</pre>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag tag-blue">Easy</span> 35 · Search Insert Position</h3>
+        <p><strong>Patrón:</strong> Binary search<br/>
+        <strong>Idea:</strong> binary search clásico con respuesta en <code>l</code>.<br/>
+        <strong>Pitfall:</strong> off-by-one en el while o devolver <code>r</code>.<br/>
+        <strong>Objetivo:</strong> ≤ 90s</p>
+        <pre class="diagram">var searchInsert = function(nums, target) {
+  let l = 0, r = nums.length;
+  while (l &lt; r) {
+    const m = Math.floor((l + r) / 2);
+    if (nums[m] &lt; target) l = m + 1;
+    else r = m;
+  }
+  return l;
+};</pre>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag tag-blue">Easy</span> 58 · Length of Last Word</h3>
+        <p><strong>Patrón:</strong> String cleanup<br/>
+        <strong>Idea:</strong> recortás espacios y tomás el último split.<br/>
+        <strong>Pitfall:</strong> no usar <code>trim()</code> y contar espacios finales.<br/>
+        <strong>Objetivo:</strong> ≤ 90s</p>
+        <pre class="diagram">var lengthOfLastWord = function(s) {
+  const words = s.trim().split(" ");
+  return words[words.length - 1].length;
+};</pre>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag tag-blue">Easy</span> 66 · Plus One</h3>
+        <p><strong>Patrón:</strong> Carry simulation<br/>
+        <strong>Idea:</strong> propagás carry desde el final; si todo era <code>9</code>, agregás <code>1</code>.<br/>
+        <strong>Pitfall:</strong> olvidarte del caso <code>[9,9,9]</code>.<br/>
+        <strong>Objetivo:</strong> ≤ 90s</p>
+        <pre class="diagram">var plusOne = function(digits) {
+  for (let i = digits.length - 1; i >= 0; i--) {
+    if (digits[i] &lt; 9) { digits[i]++; return digits; }
+    digits[i] = 0;
+  }
+  return [1, ...digits];
+};</pre>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag tag-blue">Easy</span> 88 · Merge Sorted Array</h3>
+        <p><strong>Patrón:</strong> Two pointers desde el final<br/>
+        <strong>Idea:</strong> merge desde el final para no pisar <code>nums1</code>.<br/>
+        <strong>Pitfall:</strong> hacerlo desde adelante y destruir datos útiles.<br/>
+        <strong>Objetivo:</strong> ≤ 120s</p>
+        <pre class="diagram">var merge = function(nums1, m, nums2, n) {
+  let p1 = m - 1, p2 = n - 1, pos = m + n - 1;
+  while (p2 >= 0) {
+    if (p1 >= 0 &amp;&amp; nums1[p1] > nums2[p2]) {
+      nums1[pos--] = nums1[p1--];
+    } else {
+      nums1[pos--] = nums2[p2--];
+    }
+  }
+};</pre>
+        <p style="font-style:italic; color: var(--text-muted); margin-top: 0.5rem;">"Lleno nums1 desde el final. Así nunca piso valores útiles."</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Strings específicos -->
+  <div class="concept-block">
+    <h3>🔤 Strings Específicos</h3>
+
+    <div class="grid grid-2">
+
+      <div class="card">
+        <h3><span class="tag tag-blue">Easy</span> 13 · Roman to Integer</h3>
+        <p><strong>Patrón:</strong> Linear string scan<br/>
+        <strong>Idea:</strong> sumás o restás según el valor siguiente.<br/>
+        <strong>Pitfall:</strong> olvidar el caso sustractivo (<code>IV</code>, <code>IX</code>, <code>XL</code>...).<br/>
+        <strong>Objetivo:</strong> ≤ 90s</p>
+        <pre class="diagram">var romanToInt = function(s) {
+  const val = {I:1,V:5,X:10,L:50,C:100,D:500,M:1000};
+  let resultado = 0;
+  for (let i = 0; i &lt; s.length; i++) {
+    if (val[s[i]] &lt; val[s[i+1]]) resultado -= val[s[i]];
+    else resultado += val[s[i]];
+  }
+  return resultado;
+};</pre>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag tag-blue">Easy</span> 14 · Longest Common Prefix</h3>
+        <p><strong>Patrón:</strong> Shrinking prefix<br/>
+        <strong>Idea:</strong> usás la primera palabra como base y recortás mientras no matchee.<br/>
+        <strong>Pitfall:</strong> llamar <code>indexOf</code> con el orden incorrecto o no cubrir array vacío.<br/>
+        <strong>Objetivo:</strong> ≤ 90s</p>
+        <pre class="diagram">var longestCommonPrefix = function(strs) {
+  let prefix = strs[0];
+  for (let i = 1; i &lt; strs.length; i++) {
+    while (strs[i].indexOf(prefix) !== 0) {
+      prefix = prefix.slice(0, -1);
+      if (!prefix) return "";
+    }
+  }
+  return prefix;
+};</pre>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag tag-blue">Easy</span> 28 · Find Index of First Occurrence</h3>
+        <p><strong>Patrón:</strong> Built-in string lookup<br/>
+        <strong>Idea:</strong> usás <code>indexOf</code> directamente.<br/>
+        <strong>Pitfall:</strong> reinventar substring search y perder tiempo.<br/>
+        <strong>Objetivo:</strong> ≤ 90s</p>
+        <pre class="diagram">var strStr = function(haystack, needle) {
+  return haystack.indexOf(needle);
+};</pre>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag tag-blue">Easy</span> 67 · Add Binary</h3>
+        <p><strong>Patrón:</strong> Two pointers + carry<br/>
+        <strong>Idea:</strong> suma de derecha a izquierda con carry.<br/>
+        <strong>Pitfall:</strong> no convertir chars a números o olvidar carry final.<br/>
+        <strong>Objetivo:</strong> ≤ 120s</p>
+        <pre class="diagram">var addBinary = function(a, b) {
+  let i = a.length-1, j = b.length-1, carry = 0, res = "";
+  while (i >= 0 || j >= 0 || carry) {
+    const suma = (i>=0 ? +a[i--] : 0) + (j>=0 ? +b[j--] : 0) + carry;
+    carry = Math.floor(suma / 2);
+    res = (suma % 2) + res;
+  }
+  return res;
+};</pre>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Matemáticas -->
+  <div class="concept-block">
+    <h3>🔢 Math</h3>
+    <div class="grid grid-2">
+
+      <div class="card">
+        <h3><span class="tag tag-blue">Easy</span> 9 · Palindrome Number</h3>
+        <p><strong>Patrón:</strong> Math / reverse integer<br/>
+        <strong>Idea:</strong> comparás el número con su versión invertida.<br/>
+        <strong>Pitfall:</strong> negativos nunca son palíndromos; no olvidarte de <code>Math.floor</code>.<br/>
+        <strong>Objetivo:</strong> ≤ 90s</p>
+        <pre class="diagram">var isPalindrome = function(x) {
+  if (x &lt; 0) return false;
+  let original = x, invertido = 0;
+  while (x > 0) {
+    invertido = invertido * 10 + x % 10;
+    x = Math.floor(x / 10);
+  }
+  return original === invertido;
+};</pre>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag tag-blue">Easy</span> 69 · Sqrt(x)</h3>
+        <p><strong>Patrón:</strong> Binary search<br/>
+        <strong>Idea:</strong> buscás por binary search el mayor <code>m</code> con <code>m*m ≤ x</code>.<br/>
+        <strong>Pitfall:</strong> overflow mental o condición mal cerrada.<br/>
+        <strong>Objetivo:</strong> ≤ 120s</p>
+        <pre class="diagram">var mySqrt = function(x) {
+  let l = 0, r = x;
+  while (l &lt; r) {
+    const m = Math.floor((l + r + 1) / 2);
+    if (m * m &lt;= x) l = m;
+    else r = m - 1;
+  }
+  return l;
+};</pre>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag tag-blue">Easy</span> 70 · Climbing Stairs</h3>
+        <p><strong>Patrón:</strong> Fibonacci iterativo / DP mínima<br/>
+        <strong>Idea:</strong> para llegar a cada escalón podés venir del anterior o del anterior al anterior.<br/>
+        <strong>Pitfall:</strong> usar recursión lenta en vez de loop.<br/>
+        <strong>Objetivo:</strong> ≤ 120s</p>
+        <pre class="diagram">var climbStairs = function(n) {
+  if (n &lt;= 2) return n;
+  let anterior = 1, actual = 2;
+  for (let i = 3; i &lt;= n; i++) {
+    const sig = anterior + actual;
+    anterior = actual;
+    actual = sig;
+  }
+  return actual;
+};</pre>
+        <p style="font-style:italic; color: var(--text-muted); margin-top: 0.5rem;">"Cada respuesta es la suma de las dos previas."</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Stack -->
+  <div class="concept-block">
+    <h3>📚 Stack</h3>
+    <div class="grid grid-2">
+
+      <div class="card">
+        <h3><span class="tag tag-green">Stack</span> 20 · Valid Parentheses</h3>
+        <p><strong>Patrón:</strong> Stack<br/>
+        <strong>Idea:</strong> push de aperturas y validás cierres con un mapa.<br/>
+        <strong>Pitfall:</strong> comparar contra el tope equivocado o no validar stack vacío.<br/>
+        <strong>Objetivo:</strong> ≤ 120s</p>
+        <pre class="diagram">var isValid = function(s) {
+  const pares = { ")":"(", "]":"[", "}":"{" };
+  const pila = [];
+  for (const c of s) {
+    if ("([{".includes(c)) pila.push(c);
+    else if (pila.pop() !== pares[c]) return false;
+  }
+  return pila.length === 0;
+};</pre>
+        <p style="font-style:italic; color: var(--text-muted); margin-top: 0.5rem;">"Cuando abro, guardo. Cuando cierro, lo último guardado tiene que ser la apertura correcta."</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Linked Lists -->
+  <div class="concept-block">
+    <h3>🔗 Linked Lists</h3>
+    <div class="grid grid-2">
+
+      <div class="card">
+        <h3><span class="tag tag-purple">Linked List</span> 21 · Merge Two Sorted Lists</h3>
+        <p><strong>Patrón:</strong> Dummy node + merge<br/>
+        <strong>Idea:</strong> dummy node evita casos especiales; siempre avanzás el menor.<br/>
+        <strong>Pitfall:</strong> olvidarte de devolver <code>dummy.next</code>.<br/>
+        <strong>Objetivo:</strong> ≤ 150s</p>
+        <pre class="diagram">var mergeTwoLists = function(l1, l2) {
+  const dummy = new ListNode(0);
+  let cur = dummy;
+  while (l1 &amp;&amp; l2) {
+    if (l1.val &lt; l2.val) { cur.next = l1; l1 = l1.next; }
+    else { cur.next = l2; l2 = l2.next; }
+    cur = cur.next;
+  }
+  cur.next = l1 || l2;
+  return dummy.next;
+};</pre>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag tag-purple">Linked List</span> 83 · Remove Duplicates from Sorted List</h3>
+        <p><strong>Patrón:</strong> Pointer update<br/>
+        <strong>Idea:</strong> si el siguiente tiene el mismo valor, lo salteás.<br/>
+        <strong>Pitfall:</strong> avanzar el puntero después de saltear mal y dejar duplicados.<br/>
+        <strong>Objetivo:</strong> ≤ 150s</p>
+        <pre class="diagram">var deleteDuplicates = function(head) {
+  let cur = head;
+  while (cur &amp;&amp; cur.next) {
+    if (cur.val === cur.next.val) cur.next = cur.next.next;
+    else cur = cur.next;
+  }
+  return head;
+};</pre>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Árboles -->
+  <div class="concept-block">
+    <h3>🌳 Binary Trees</h3>
+    <div class="grid grid-2">
+
+      <div class="card">
+        <h3><span class="tag tag-orange">Tree</span> 94 · Binary Tree Inorder Traversal</h3>
+        <p><strong>Patrón:</strong> DFS inorder<br/>
+        <strong>Idea:</strong> recursión: izquierda → raíz → derecha.<br/>
+        <strong>Pitfall:</strong> olvidarte del caso <code>null</code> o invertir el orden.<br/>
+        <strong>Objetivo:</strong> ≤ 150s</p>
+        <pre class="diagram">var inorderTraversal = function(root) {
+  const res = [];
+  const dfs = (node) => {
+    if (!node) return;
+    dfs(node.left);
+    res.push(node.val);
+    dfs(node.right);
+  };
+  dfs(root);
+  return res;
+};</pre>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag tag-orange">Tree</span> 100 · Same Tree</h3>
+        <p><strong>Patrón:</strong> Recursive tree compare<br/>
+        <strong>Idea:</strong> ambos null = true; uno null = false; comparás valor y ramas.<br/>
+        <strong>Pitfall:</strong> no separar claramente "ambos null" de "uno null".<br/>
+        <strong>Objetivo:</strong> ≤ 120s</p>
+        <pre class="diagram">var isSameTree = function(p, q) {
+  if (!p &amp;&amp; !q) return true;
+  if (!p || !q) return false;
+  if (p.val !== q.val) return false;
+  return isSameTree(p.left, q.left)
+      &amp;&amp; isSameTree(p.right, q.right);
+};</pre>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag tag-orange">Tree</span> 101 · Symmetric Tree</h3>
+        <p><strong>Patrón:</strong> Mirrored tree recursion<br/>
+        <strong>Idea:</strong> comparás espejo entre subárbol izquierdo y derecho.<br/>
+        <strong>Pitfall:</strong> comparar izquierda con izquierda en vez de espejo cruzado.<br/>
+        <strong>Objetivo:</strong> ≤ 150s</p>
+        <pre class="diagram">var isSymmetric = function(root) {
+  const mirror = (l, r) => {
+    if (!l &amp;&amp; !r) return true;
+    if (!l || !r) return false;
+    return l.val === r.val
+        &amp;&amp; mirror(l.left, r.right)
+        &amp;&amp; mirror(l.right, r.left);
+  };
+  return mirror(root.left, root.right);
+};</pre>
+        <p style="font-style:italic; color: var(--text-muted); margin-top: 0.5rem;">"Comparo espejo cruzado: izquierda.left vs derecha.right."</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TABLA RESUMEN -->
+  <div class="section-title">Resumen de los 20 Problemas</div>
+
+  <div class="concept-block">
+    <table style="width:100%; border-collapse: collapse; font-size: 0.88rem;">
+      <thead>
+        <tr style="border-bottom: 2px solid var(--border);">
+          <th style="text-align:left; padding: 0.5rem 1rem;">#</th>
+          <th style="text-align:left; padding: 0.5rem 1rem;">Problema</th>
+          <th style="text-align:left; padding: 0.5rem 1rem;">Patrón</th>
+          <th style="text-align:left; padding: 0.5rem 1rem;">Pitfall principal</th>
+          <th style="text-align:center; padding: 0.5rem 1rem;">Meta</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid var(--border);"><td style="padding:0.4rem 1rem;">1</td><td>Two Sum</td><td>Doble for</td><td>j = 0 en vez de i+1</td><td style="text-align:center;">≤ 90s</td></tr>
+        <tr style="border-bottom: 1px solid var(--border);"><td style="padding:0.4rem 1rem;">9</td><td>Palindrome Number</td><td>Math reverse</td><td>Negativos no son palíndromos</td><td style="text-align:center;">≤ 90s</td></tr>
+        <tr style="border-bottom: 1px solid var(--border);"><td style="padding:0.4rem 1rem;">13</td><td>Roman to Integer</td><td>Linear scan</td><td>Olvidar caso sustractivo</td><td style="text-align:center;">≤ 90s</td></tr>
+        <tr style="border-bottom: 1px solid var(--border);"><td style="padding:0.4rem 1rem;">14</td><td>Longest Common Prefix</td><td>Shrinking prefix</td><td>indexOf con orden incorrecto</td><td style="text-align:center;">≤ 90s</td></tr>
+        <tr style="border-bottom: 1px solid var(--border);"><td style="padding:0.4rem 1rem;">20</td><td>Valid Parentheses</td><td>Stack</td><td>Stack vacío sin validar</td><td style="text-align:center;">≤ 120s</td></tr>
+        <tr style="border-bottom: 1px solid var(--border);"><td style="padding:0.4rem 1rem;">21</td><td>Merge Two Sorted Lists</td><td>Dummy node</td><td>Olvidar dummy.next</td><td style="text-align:center;">≤ 150s</td></tr>
+        <tr style="border-bottom: 1px solid var(--border);"><td style="padding:0.4rem 1rem;">26</td><td>Remove Duplicates (Array)</td><td>Two pointers</td><td>Pisar la primera posición</td><td style="text-align:center;">≤ 90s</td></tr>
+        <tr style="border-bottom: 1px solid var(--border);"><td style="padding:0.4rem 1rem;">27</td><td>Remove Element</td><td>Write index</td><td>Intentar borrar en vez de reescribir</td><td style="text-align:center;">≤ 90s</td></tr>
+        <tr style="border-bottom: 1px solid var(--border);"><td style="padding:0.4rem 1rem;">28</td><td>First Occurrence in String</td><td>Built-in</td><td>Reinventar substring search</td><td style="text-align:center;">≤ 90s</td></tr>
+        <tr style="border-bottom: 1px solid var(--border);"><td style="padding:0.4rem 1rem;">35</td><td>Search Insert Position</td><td>Binary search</td><td>Off-by-one o devolver r</td><td style="text-align:center;">≤ 90s</td></tr>
+        <tr style="border-bottom: 1px solid var(--border);"><td style="padding:0.4rem 1rem;">58</td><td>Length of Last Word</td><td>String cleanup</td><td>No usar trim()</td><td style="text-align:center;">≤ 90s</td></tr>
+        <tr style="border-bottom: 1px solid var(--border);"><td style="padding:0.4rem 1rem;">66</td><td>Plus One</td><td>Carry simulation</td><td>Olvidar caso [9,9,9]</td><td style="text-align:center;">≤ 90s</td></tr>
+        <tr style="border-bottom: 1px solid var(--border);"><td style="padding:0.4rem 1rem;">67</td><td>Add Binary</td><td>Two ptr + carry</td><td>No convertir chars a números</td><td style="text-align:center;">≤ 120s</td></tr>
+        <tr style="border-bottom: 1px solid var(--border);"><td style="padding:0.4rem 1rem;">69</td><td>Sqrt(x)</td><td>Binary search</td><td>Condición mal cerrada</td><td style="text-align:center;">≤ 120s</td></tr>
+        <tr style="border-bottom: 1px solid var(--border);"><td style="padding:0.4rem 1rem;">70</td><td>Climbing Stairs</td><td>DP mínima</td><td>Usar recursión lenta</td><td style="text-align:center;">≤ 120s</td></tr>
+        <tr style="border-bottom: 1px solid var(--border);"><td style="padding:0.4rem 1rem;">83</td><td>Remove Duplicates (List)</td><td>Pointer update</td><td>Avanzar puntero mal</td><td style="text-align:center;">≤ 150s</td></tr>
+        <tr style="border-bottom: 1px solid var(--border);"><td style="padding:0.4rem 1rem;">88</td><td>Merge Sorted Array</td><td>Two ptr from end</td><td>Hacerlo desde adelante</td><td style="text-align:center;">≤ 120s</td></tr>
+        <tr style="border-bottom: 1px solid var(--border);"><td style="padding:0.4rem 1rem;">94</td><td>Binary Tree Inorder</td><td>DFS recursivo</td><td>Olvidar caso null</td><td style="text-align:center;">≤ 150s</td></tr>
+        <tr style="border-bottom: 1px solid var(--border);"><td style="padding:0.4rem 1rem;">100</td><td>Same Tree</td><td>Tree compare</td><td>No separar ambos null de uno null</td><td style="text-align:center;">≤ 120s</td></tr>
+        <tr><td style="padding:0.4rem 1rem;">101</td><td>Symmetric Tree</td><td>Mirror recursion</td><td>Comparar izq con izq en vez de espejo</td><td style="text-align:center;">≤ 150s</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PLAN 7 DÍAS -->
+  <div class="section-title">Plan de 7 Días</div>
+
+  <div class="grid grid-2">
+
+    <div class="card">
+      <span class="card-icon">📊</span>
+      <h3>Día 1 — Diagnóstico Real</h3>
+      <div class="steps">
+        <div class="step"><strong>Warmup:</strong> reescribí de memoria Map, stack de paréntesis, binary search.</div>
+        <div class="step"><strong>Bloque:</strong> resolvé los 20 problemas en orden sin pausar el timer.</div>
+        <div class="step"><strong>Corrección:</strong> reescribí sin mirar: 1, 20, 70, 94, 101.</div>
+        <div class="step"><strong>Meta del día:</strong> obtener línea base. Anotá tiempo total y dónde dudaste.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="card-icon">📝</span>
+      <h3>Día 2 — Strings + Arrays Fáciles</h3>
+      <div class="steps">
+        <div class="step"><strong>Warmup:</strong> reescribí de memoria: 13, 14, 28, 58, 66.</div>
+        <div class="step"><strong>Bloque:</strong> practica 1, 13, 14, 26, 27, 28, 35, 58, 66. Dos rondas: sin límite → cap 90s.</div>
+        <div class="step"><strong>Corrección:</strong> reescribí desde cero las 3 más lentas.</div>
+        <div class="step"><strong>Meta del día:</strong> bajar fricción de escritura en array/string.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="card-icon">🎯</span>
+      <h3>Día 3 — Stack + Binary Search + Math</h3>
+      <div class="steps">
+        <div class="step"><strong>Warmup:</strong> stack de paréntesis, Math.floor binary search, loop de carry.</div>
+        <div class="step"><strong>Bloque:</strong> practica 20, 67, 69, 70. Mini ronda extra de 35 para reforzar binary search.</div>
+        <div class="step"><strong>Corrección:</strong> reescribí 20, 69, 70 sin mirar. Si dudás, repetilo 3 veces.</div>
+        <div class="step"><strong>Meta del día:</strong> cero duda en stack, carry y binary search. Cada uno en menos de 2 min.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="card-icon">🌳</span>
+      <h3>Día 4 — Linked Lists + Trees</h3>
+      <div class="steps">
+        <div class="step"><strong>Warmup:</strong> reescribí dummy node para merge y dfs(node) para inorder.</div>
+        <div class="step"><strong>Bloque:</strong> practica 21, 83, 94, 100, 101. Segunda ronda solo 21, 94, 101.</div>
+        <div class="step"><strong>Corrección:</strong> verificá caso base nulo, izq/der no invertidos, devolver dummy.next.</div>
+        <div class="step"><strong>Meta del día:</strong> listas y árboles dejan de ser cuello de botella.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="card-icon">⏱️</span>
+      <h3>Día 5 — Simulacro A</h3>
+      <div class="steps">
+        <div class="step"><strong>Warmup:</strong> 5 min snippets + 5 min repasar orden y patrón de los 20.</div>
+        <div class="step"><strong>Bloque:</strong> simulacro completo. Objetivo: <strong>&lt; 50 min</strong>.</div>
+        <div class="step"><strong>Corrección:</strong> reescribí las 5 más lentas. Si alguna superó 3 min, repetila hasta bajarla.</div>
+        <div class="step"><strong>Análisis:</strong> tiempo total, promedio por problema, cantidad de bloqueos.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="card-icon">⏱️</span>
+      <h3>Día 6 — Simulacro B</h3>
+      <div class="steps">
+        <div class="step"><strong>Warmup:</strong> reescribí de memoria 1, 20, 21, 69, 94, 101.</div>
+        <div class="step"><strong>Bloque:</strong> simulacro completo. Objetivo: <strong>&lt; 45 min</strong>.</div>
+        <div class="step"><strong>Corrección:</strong> reescribí los problemás donde perdiste tiempo por sintaxis.</div>
+        <div class="step"><strong>Meta:</strong> entrar en ritmo de intento real. Si no bajás de 45, reforzá linked lists y trees.</div>
+      </div>
+    </div>
+
+    <div class="card" style="grid-column: span 2;">
+      <span class="card-icon">🎥</span>
+      <h3>Día 7 — Simulacro C Grabado</h3>
+      <div class="steps">
+        <div class="step"><strong>Warmup:</strong> snippets rápidos + validar configuración del entorno real.</div>
+        <div class="step"><strong>Bloque:</strong> simulacro completo grabado. Objetivo: <strong>&lt; 40 min</strong>. Sin pausas, sin ayudas, sin salir del flujo.</div>
+        <div class="step"><strong>Corrección:</strong> mirá el video y marcá: pausas largas, relecturas innecesarias, bugs por ansiedad, problemas donde escribiste de más.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SIMULACROS Y CHECKLIST -->
+  <div class="section-title">Setup del Intento Real</div>
+
+  <div class="grid grid-2">
+
+    <div class="concept-block">
+      <h3>⚙️ Setup</h3>
+      <ul class="checklist">
+        <li>Pantalla completa</li>
+        <li>LeetCode listo con JavaScript seleccionado</li>
+        <li>Timer visible</li>
+        <li>Sin música si te distrae</li>
+        <li>Sin otra pestaña tentadora abierta</li>
+      </ul>
+    </div>
+
+    <div class="concept-block">
+      <h3>📋 Reglas del Flujo</h3>
+      <div class="steps">
+        <div class="step">Seguí siempre el mismo orden de los 20.</div>
+        <div class="step">Leé solo lo mínimo del statement.</div>
+        <div class="step">Activá el patrón memorizado en 20–30 segundos.</div>
+        <div class="step">Si ya pasó, no refactors.</div>
+        <div class="step">Si un test falla, corregí el bug más chico posible y seguí.</div>
+      </div>
+    </div>
+
+    <div class="concept-block" style="grid-column: span 2;">
+      <h3>✅ Checklist de Readiness — Estás listo cuando...</h3>
+      <ul class="checklist">
+        <li>Resolvés 18/20 o más sin dudar del patrón</li>
+        <li>Promedio por problema por debajo de 2 minutos</li>
+        <li>21 (Merge Lists), 83, 94, 100, 101 salen sin bloqueo</li>
+        <li>Tenés al menos un video grabado sub-40 min</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- PLANTILLA POST-SIMULACRO -->
+  <div class="section-title">Plantilla Post-Simulacro</div>
+  <div class="concept-block">
+    <pre class="diagram">Tiempo total:
+Problemas más lentos:
+Bugs repetidos:
+Dónde perdiste tiempo leyendo:
+Qué snippet faltaba automatizar:
+Próximo foco:</pre>
+  </div>
+
+</main>
+
+<footer>
+  <p>⚡ System Design Guide · <a href="../index.html">Volver al inicio</a> · Material de LeetCode Speed Prep — 20 problemas Easy en JS</p>
+</footer>
+
+</body>
+</html>

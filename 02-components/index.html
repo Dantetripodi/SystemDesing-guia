@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Componentes Core — System Design Guide</title>
+  <link rel="stylesheet" href="../styles/main.css" />
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="../index.html">⚡ System<span>Design</span></a>
+  <div class="nav-links">
+    <a href="../01-fundamentals/index.html">Fundamentos</a>
+    <a href="../02-components/index.html" class="active">Componentes</a>
+    <a href="../03-patterns/index.html">Patrones</a>
+    <a href="../04-databases/index.html">Bases de Datos</a>
+    <a href="../05-apis/index.html">APIs</a>
+    <a href="../06-case-studies/index.html">Casos Reales</a>
+    <a href="../07-infrastructure/index.html">Infraestructura</a>
+    <a href="../08-interview-prep/index.html">Entrevistas</a>
+    <a href="../09-resources/index.html">Recursos</a>
+    <a href="../10-advanced-topics/index.html">Avanzado</a>
+    <a href="../11-security/index.html">🔐 Seguridad</a>
+    <a href="../12-search/index.html">🔍 Search</a>
+    <a href="../13-soft-skills/index.html">🎭 Soft Skills</a>
+    <a href="../14-leetcode/index.html">⚡ LeetCode</a>
+    <a href="../15-ai-engineering/index.html">🤖 AI Eng</a>
+    <a href="../16-token-optimization/index.html">🪙 Tokens</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / Componentes Core</div>
+  <h1>⚙️ Componentes Core</h1>
+  <p>Los bloques de construcción que aparecen en casi todos los sistemas escalables.</p>
+</div>
+
+<main>
+
+  <!-- LOAD BALANCER -->
+  <div class="section-title">Load Balancer</div>
+  <p class="section-subtitle">Distribuye el tráfico entrante entre múltiples servidores.</p>
+
+  <div class="diagram">                    ┌─────────────────┐
+  Clients ──────────→  │  Load Balancer  │
+  (millions)           └────────┬────────┘
+                                │
+               ┌────────────────┼────────────────┐
+               ↓                ↓                ↓
+          [Server 1]       [Server 2]       [Server 3]
+          (healthy)        (healthy)        (healthy)
+               │                                 │
+          [Server 4]                        [Server N]
+          (FAILED) ← LB detects failure,
+                      stops sending traffic</div>
+
+  <div class="grid grid-3">
+    <div class="concept-block">
+      <h4>🔄 Round Robin</h4>
+      <p>Cada request va al siguiente servidor en orden. Simple y efectivo cuando todos los servidores son equivalentes.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>⚖️ Weighted Round Robin</h4>
+      <p>Servidores más potentes reciben más tráfico. Configuras un peso por servidor (ej: 70/30).</p>
+    </div>
+    <div class="concept-block purple">
+      <h4>📉 Least Connections</h4>
+      <p>El request va al servidor con menos conexiones activas. Ideal para requests de larga duración.</p>
+    </div>
+    <div class="concept-block orange">
+      <h4>🔗 IP Hash</h4>
+      <p>El mismo cliente siempre va al mismo servidor. Útil para sesiones sin sticky sessions en el backend.</p>
+    </div>
+    <div class="concept-block red">
+      <h4>🏃 Least Response Time</h4>
+      <p>Va al servidor más rápido actualmente. Requiere que el LB mida el response time continuamente.</p>
+    </div>
+    <div class="concept-block">
+      <h4>🌐 Layer 7 (HTTP)</h4>
+      <p>Puede rutear basándose en URL, headers, cookies. Ej: /api → API servers, /static → file servers.</p>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Tipo</th><th>Layer</th><th>Ejemplos</th><th>Caso de Uso</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Hardware LB</td><td>L4/L7</td><td>F5, Citrix</td><td>Grandes empresas, altísimo tráfico</td></tr>
+      <tr><td>Software LB</td><td>L7</td><td>Nginx, HAProxy</td><td>La mayoría de sistemas web</td></tr>
+      <tr><td>Cloud LB</td><td>L4/L7</td><td>AWS ALB/NLB, GCP LB</td><td>Cloud-native applications</td></tr>
+      <tr><td>DNS LB</td><td>DNS</td><td>Route53, Cloudflare</td><td>Distribución geográfica</td></tr>
+    </tbody>
+  </table>
+
+  <hr class="section-divider" />
+
+  <!-- CACHING -->
+  <div class="section-title">Caching</div>
+  <p class="section-subtitle">Almacenar resultados frecuentes en memoria para reducir latencia y carga en la base de datos.</p>
+
+  <div class="callout">
+    <div class="callout-icon">💡</div>
+    <p><strong>Regla de oro:</strong> Si el 80% del tráfico accede al 20% de los datos, caching puede reducir la carga de tu DB en un 80%. Twitter sirve el 99% del timeline desde cache.</p>
+  </div>
+
+  <div class="diagram">  SIN CACHE:
+  User → Server → Database (10-100ms) → Server → User
+  (cada request pega en DB)
+
+  CON CACHE:
+  User → Server → Cache HIT (0.1ms) → User    ← 99% de requests
+  User → Server → Cache MISS → DB → Cache → User  ← 1%
+
+  Cache Hierarchy:
+  CPU L1 Cache (0.5ns) → L2 (7ns) → RAM (100ns) → Redis (1ms) → DB (10-100ms)</div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <span class="card-icon">⚡</span>
+      <h3>Redis</h3>
+      <p>In-memory data store. Soporta strings, hashes, lists, sets, sorted sets. Persistence opcional. Clustering. El más usado en producción.</p>
+      <span class="tag tag-red">Open Source · In-Memory</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🐘</span>
+      <h3>Memcached</h3>
+      <p>Simple key-value cache. Más rápido que Redis para casos simples. Sin persistencia ni estructuras avanzadas. Multi-threaded.</p>
+      <span class="tag tag-blue">Simple · Rápido</span>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top: 2rem; font-size: 1.2rem;">Estrategias de Cache</div>
+
+  <div class="concept-block">
+    <h4>📥 Cache-Aside (Lazy Loading)</h4>
+    <p>La aplicación maneja el cache. Read: busca en cache → si miss, busca en DB, guarda en cache. Write: invalida o actualiza cache. <strong>El más común.</strong></p>
+  </div>
+  <pre><code><span class="cm"># Cache-Aside pattern</span>
+<span class="kw">def</span> <span class="fn">get_user</span>(user_id):
+    user = cache.get(<span class="str">f"user:{user_id}"</span>)
+    <span class="kw">if</span> user <span class="kw">is</span> <span class="kw">None</span>:  <span class="cm"># Cache miss</span>
+        user = db.query(<span class="str">"SELECT * FROM users WHERE id = ?"</span>, user_id)
+        cache.set(<span class="str">f"user:{user_id}"</span>, user, ttl=<span class="num">3600</span>)
+    <span class="kw">return</span> user</code></pre>
+
+  <div class="concept-block green">
+    <h4>✍️ Write-Through</h4>
+    <p>Cada write va PRIMERO al cache y LUEGO a la DB. Cache siempre consistente con la DB. Mayor latencia en writes, pero reads siempre desde cache.</p>
+  </div>
+  <div class="concept-block purple">
+    <h4>💾 Write-Behind (Write-Back)</h4>
+    <p>Writes van al cache inmediatamente, se propagan a DB de forma asíncrona. Muy rápido, pero riesgo de pérdida de datos si el cache falla antes de escribir en DB.</p>
+  </div>
+  <div class="concept-block orange">
+    <h4>🔄 Read-Through</h4>
+    <p>El cache maneja automáticamente el miss: busca en DB y se auto-popula. La app solo habla con el cache. Cache como abstracción completa.</p>
+  </div>
+
+  <div class="section-title" style="margin-top: 2rem; font-size: 1.2rem;">Problemas de Cache</div>
+
+  <div class="grid grid-3">
+    <div class="concept-block red">
+      <h4>💥 Cache Stampede (Thundering Herd)</h4>
+      <p>Muchas requests llegan al mismo tiempo con cache miss. Todas pegan en DB. Solución: mutex lock, probabilistic early expiration.</p>
+    </div>
+    <div class="concept-block">
+      <h4>🌊 Cache Avalanche</h4>
+      <p>Muchas keys expiran al mismo tiempo. Enorme carga súbita en DB. Solución: TTL jitter (aleatorizar expiración).</p>
+    </div>
+    <div class="concept-block green">
+      <h4>🔍 Cache Penetration</h4>
+      <p>Requests para datos que no existen. Siempre miss en cache + miss en DB. Solución: cache el null result con TTL corto, Bloom filters.</p>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- MESSAGE QUEUES -->
+  <div class="section-title">Message Queues</div>
+  <p class="section-subtitle">Desacoplar productores de consumidores para procesar tareas de forma asíncrona.</p>
+
+  <div class="diagram">  SIN QUEUE (síncrono):
+  Client → Server → [Enviar email] → [Resize imagen] → [Notificar push] → Response
+           (espera 5 segundos)
+
+  CON QUEUE (asíncrono):
+  Client → Server → Queue.publish(task) → Response inmediato (100ms)
+                        ↓
+                   [Worker 1: Envía email]
+                   [Worker 2: Resize imagen]
+                   [Worker 3: Notifica push]
+                   (se ejecutan en paralelo, el cliente no espera)</div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <span class="card-icon">🦒</span>
+      <h3>Apache Kafka</h3>
+      <p>Distributed streaming platform. Publish-subscribe + persistent log. Millones de mensajes/segundo. Ideal para event streaming, analytics en real-time, pipelines de datos.</p>
+      <span class="tag tag-orange">Streaming · Alta escala</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🐰</span>
+      <h3>RabbitMQ</h3>
+      <p>Message broker clásico. AMQP protocol. Routing flexible, dead letter queues, acknowledgments. Ideal para task queues, microservices communication.</p>
+      <span class="tag tag-green">Task Queue · Flexible</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">☁️</span>
+      <h3>AWS SQS</h3>
+      <p>Managed queue service. Sin servidor que administrar. Standard (at-least-once) o FIFO (exactly-once). Integración nativa con AWS.</p>
+      <span class="tag tag-blue">Managed · AWS</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🔴</span>
+      <h3>Redis Pub/Sub</h3>
+      <p>Simple para real-time notifications. No persistencia de mensajes. Si el subscriber está offline, pierde los mensajes. Ideal para chat, notifications en tiempo real.</p>
+      <span class="tag tag-red">Simple · Real-time</span>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Feature</th><th>Kafka</th><th>RabbitMQ</th><th>SQS</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Persistencia</td><td>✅ Días/semanas</td><td>✅ Configurable</td><td>✅ 14 días</td></tr>
+      <tr><td>Throughput</td><td>🚀 Millones/seg</td><td>⚡ Miles/seg</td><td>⚡ Miles/seg</td></tr>
+      <tr><td>Delivery</td><td>At-least-once</td><td>At-least-once</td><td>At-least-once / FIFO</td></tr>
+      <tr><td>Replay</td><td>✅ Sí</td><td>❌ No</td><td>❌ No</td></tr>
+      <tr><td>Complejidad</td><td>Alta</td><td>Media</td><td>Baja (managed)</td></tr>
+      <tr><td>Caso de uso</td><td>Streaming, analytics</td><td>Task queues</td><td>Cloud-native</td></tr>
+    </tbody>
+  </table>
+
+  <hr class="section-divider" />
+
+  <!-- CDN -->
+  <div class="section-title">CDN (Content Delivery Network)</div>
+  <p class="section-subtitle">Red de servidores distribuidos globalmente que acercan el contenido al usuario.</p>
+
+  <div class="diagram">  SIN CDN:
+  Usuario en Buenos Aires → Origin Server en Virginia → 150ms latencia
+
+  CON CDN:
+  Usuario en Buenos Aires → CDN Edge en São Paulo → 10ms latencia
+                                  ↕ (si no está en cache)
+                            Origin Server en Virginia
+
+  CDN POP (Points of Presence):
+  ┌──────────────────────────────────────────────┐
+  │  🌎 USA     🌍 Europa    🌏 Asia              │
+  │  NY, LA    London,      Tokyo,               │
+  │  Chicago   Frankfurt    Singapore            │
+  │                                              │
+  │  → 100+ ubicaciones (Cloudflare: 285+)       │
+  └──────────────────────────────────────────────┘</div>
+
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>📤 Push CDN</h4>
+      <p>Tú subes el contenido al CDN manualmente o automáticamente. CDN lo sirve desde ese momento. Mejor para contenido estático que cambia poco.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>📥 Pull CDN</h4>
+      <p>CDN busca el contenido en tu origen cuando alguien lo pide por primera vez. Luego lo cachea. Más simple de configurar. Primer request puede ser lento.</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <div class="callout-icon">🌐</div>
+    <p><strong>Proveedores principales:</strong> Cloudflare (285+ POPs), AWS CloudFront, Fastly, Akamai. Para imágenes y videos: Cloudinary, imgix. Netflix tiene su propio CDN: Open Connect.</p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- API GATEWAY -->
+  <div class="section-title">API Gateway</div>
+  <p class="section-subtitle">Punto de entrada único que maneja cross-cutting concerns para todos los microservicios.</p>
+
+  <div class="diagram">                     ┌─────────────────────┐
+  Clients              │     API Gateway     │
+  (Mobile, Web) ──────→│                     │
+                        │ ● Authentication    │
+                        │ ● Rate Limiting     │
+                        │ ● Load Balancing    │
+                        │ ● SSL Termination   │
+                        │ ● Request Routing   │
+                        │ ● Response Caching  │
+                        │ ● Logging/Tracing   │
+                        └─────────┬───────────┘
+                                  │
+              ┌───────────────────┼───────────────────┐
+              ↓                   ↓                   ↓
+       [User Service]     [Order Service]    [Product Service]
+       :8001              :8002              :8003</div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <span class="card-icon">🔑</span>
+      <h3>Autenticación centralizada</h3>
+      <p>JWT validation, OAuth2, API Keys — una sola vez en el gateway, no en cada microservicio.</p>
+    </div>
+    <div class="card">
+      <span class="card-icon">🛡️</span>
+      <h3>Rate Limiting</h3>
+      <p>Limitar requests por usuario/IP antes de que lleguen a los servicios. Protege contra DDoS y abuse.</p>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- SERVICE DISCOVERY -->
+  <div class="section-title">Service Discovery</div>
+  <p class="section-subtitle">"¿Cómo se encuentran los microservicios entre sí?" — Pregunta que distingue el senior del semi-senior.</p>
+
+  <div class="callout">
+    <div class="callout-icon">💡</div>
+    <p><strong>El problema:</strong> En microservicios, las instancias se crean y destruyen continuamente (auto-scaling, deploys, fallos). Sus IPs cambian. ¿Cómo sabe el Order Service a qué IP llamar al Payment Service si cambia todo el tiempo?</p>
+  </div>
+
+  <div class="diagram">  CLIENT-SIDE DISCOVERY:
+
+  Service Registry (Consul / etcd / Eureka):
+  ┌──────────────────────────────────────────┐
+  │  payment-service → [10.0.1.5:8080,       │
+  │                      10.0.1.6:8080,      │
+  │                      10.0.1.7:8080]      │
+  │  user-service    → [10.0.2.1:8080]       │
+  └──────────────────────────────────────────┘
+
+  Order Service:
+  1. "¿Dónde está payment-service?"
+  2. Consulta al Service Registry → lista de IPs
+  3. Elige una IP (load balancing en el cliente)
+  4. Hace el request directamente
+
+  Cuando Payment Service arranca:
+  → Se registra en el Registry (IP + health check)
+  Cuando Payment Service muere:
+  → Health check falla → Registry lo elimina
+
+  ─────────────────────────────────────────────────────────
+
+  SERVER-SIDE DISCOVERY:
+
+  Order Service → API Gateway / Load Balancer → payment-service
+  El cliente no sabe nada de service discovery.
+  El gateway consulta al registry y hace el routing.
+
+  ┌─────────────┐   "payment-service"   ┌────────────────┐
+  │ Order Svc   │──────────────────────→│   LB/Gateway   │──→ 10.0.1.5
+  └─────────────┘                        │  (Nginx/Envoy) │──→ 10.0.1.6
+                                         └────────────────┘──→ 10.0.1.7
+  ✅ El cliente es más simple
+  ✅ El gateway puede hacer health checks, retries, circuit breaking</div>
+
+  <div class="grid grid-3">
+    <div class="concept-block">
+      <h4>Consul (HashiCorp)</h4>
+      <p>El más completo. Service registry + health checks + key-value store + service mesh. Multi-datacenter nativo. Usado en microservicios no-Kubernetes. Muy robusto en producción.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>Kubernetes DNS</h4>
+      <p>Si usás K8s, service discovery viene incluido. Cada Service tiene un DNS interno: <code>payment-service.namespace.svc.cluster.local</code>. El kube-proxy maneja el routing y load balancing automáticamente.</p>
+    </div>
+    <div class="concept-block purple">
+      <h4>etcd</h4>
+      <p>Distributed key-value store de alta consistencia. El "cerebro" de Kubernetes — almacena todo el estado del cluster. También usado directamente por servicios que necesitan un registro distribuido confiable.</p>
+    </div>
+  </div>
+
+  <div class="concept-block orange">
+    <h4>Health Checks — El componente crítico</h4>
+    <p>
+      <strong>Liveness probe:</strong> ¿El proceso está vivo? Si falla → reiniciar el container. Ejemplo: <code>GET /healthz</code> → 200.<br/>
+      <strong>Readiness probe:</strong> ¿Está listo para recibir tráfico? Si falla → sacar del load balancer (pero no reiniciar). Ejemplo: verifica que la DB está conectada.<br/>
+      <strong>Startup probe:</strong> Para apps lentas en iniciar (JVM). Evita que Liveness mate el proceso antes de que levante.
+    </p>
+  </div>
+
+  <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+    <a class="card" href="../03-patterns/index.html" style="flex: 1; min-width: 200px;">
+      <span class="card-icon">🏛️</span>
+      <h3>Siguiente: Patrones de Arquitectura →</h3>
+      <p>Microservicios, Event-Driven, CQRS y más.</p>
+    </a>
+    <a class="card" href="../04-databases/index.html" style="flex: 1; min-width: 200px;">
+      <span class="card-icon">🗄️</span>
+      <h3>Bases de Datos →</h3>
+      <p>SQL vs NoSQL, sharding, replicación.</p>
+    </a>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- CACHING DEEP DIVE — HelloInterview -->
+  <div class="section-title">Caching — Deep Dive</div>
+  <p class="section-subtitle">Basado en HelloInterview · Dónde cachear, qué evictar, y problemas en producción.</p>
+
+  <div class="callout">
+    <div class="callout-icon">⚡</div>
+    <p><strong>El impacto real:</strong> "Leer un perfil de usuario de Postgres toma ~50ms. Desde Redis en memoria toma ~1ms." Esa diferencia multiplicada por millones de requests es la diferencia entre escalar o no.</p>
+  </div>
+
+  <div class="section-title" style="font-size: 1.2rem; margin-top: 1.5rem;">Dónde Cachear</div>
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>🏎️ In-Process Cache</h4>
+      <p>Cache dentro del proceso de la app. Acceso instantáneo (nanosegundos). Cada instancia tiene su propio cache — no compartido entre servidores. Ideal para: configuración, feature flags, datos muy pequeños y estables.</p>
+      <pre style="margin-top:0.5rem"><code><span class="cm"># Python in-process cache</span>
+<span class="kw">from</span> functools <span class="kw">import</span> lru_cache
+
+@lru_cache(maxsize=<span class="num">1000</span>)
+<span class="kw">def</span> <span class="fn">get_config</span>(key: <span class="fn">str</span>) -> <span class="fn">str</span>:
+    <span class="kw">return</span> db.get(key)</code></pre>
+    </div>
+    <div class="concept-block green">
+      <h4>🌐 External Cache (Redis)</h4>
+      <p>Cache compartido entre todos los servidores. ~1ms de latencia. Soporte para estructuras de datos complejas (lists, sets, sorted sets). Persistencia opcional. La solución más común para sistemas distribuidos.</p>
+    </div>
+    <div class="concept-block purple">
+      <h4>📱 Client-Side Cache</h4>
+      <p>Cache en el navegador o app móvil. HTTP caching headers (Cache-Control, ETag). Service Workers para PWA. Elimina requests completamente — zero latencia de red. Ideal para assets estáticos.</p>
+    </div>
+    <div class="concept-block orange">
+      <h4>🌍 CDN Cache</h4>
+      <p>Servidores distribuidos geográficamente. Reducen latencia de 250ms a 20ms para usuarios lejanos al origin. Modernamente pueden cachear respuestas de API, no solo archivos estáticos.</p>
+    </div>
+  </div>
+
+  <div class="section-title" style="font-size: 1.2rem; margin-top: 2rem;">Políticas de Evicción</div>
+  <p class="section-subtitle">¿Qué pasa cuando el cache está lleno? El algoritmo determina qué se elimina.</p>
+
+  <div class="grid grid-3">
+    <div class="concept-block">
+      <h4>🕐 LRU — Least Recently Used</h4>
+      <p>Elimina el item que no se accedió hace más tiempo. Se adapta bien a la mayoría de workloads. <strong>El default en Redis.</strong> Bueno cuando los datos populares cambian con el tiempo.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>📊 LFU — Least Frequently Used</h4>
+      <p>Elimina el item menos accedido históricamente. Mejor que LRU cuando ciertos keys son siempre populares (resultados de búsquedas top, páginas de inicio). Mantiene el "long-term popular" content.</p>
+    </div>
+    <div class="concept-block purple">
+      <h4>⏰ TTL — Time To Live</h4>
+      <p>Cada key expira después de N segundos. Garantiza frescura de los datos. Casi siempre se combina con LRU/LFU. TTL corto = más consistencia, más carga en DB. TTL largo = mejor rendimiento, posible staleness.</p>
+    </div>
+    <div class="concept-block orange">
+      <h4>📋 FIFO — First In First Out</h4>
+      <p>Elimina el item más antiguo sin importar si fue accedido. Rara vez usado en producción. Útil solo cuando el orden de inserción importa más que la frecuencia de acceso.</p>
+    </div>
+    <div class="concept-block red">
+      <h4>🎲 Random Replacement</h4>
+      <p>Elimina un item al azar. Sorprendentemente bueno en la práctica para algunos workloads uniformes. Sin overhead de tracking. CPU-efficient.</p>
+    </div>
+    <div class="concept-block">
+      <h4>🔮 Allkeys-LFU (Redis)</h4>
+      <p>En Redis: si la memoria está llena, aplica LFU a TODOS los keys (no solo los con TTL). Combinación práctica para maximizar cache hit rate en workloads variables.</p>
+    </div>
+  </div>
+
+  <div class="section-title" style="font-size: 1.2rem; margin-top: 2rem;">Problemas Avanzados de Cache</div>
+
+  <div class="concept-block red">
+    <h4>🔥 Hot Keys</h4>
+    <p>Un solo key recibe el 80% del tráfico (ej: el perfil de un celebrity). Sobrecarga un único nodo de Redis. <strong>Soluciones:</strong><br/>
+    1. <strong>Key replication:</strong> <code>user:beyonce:0</code>, <code>user:beyonce:1</code>... elige uno al azar en reads.<br/>
+    2. <strong>Local fallback cache:</strong> cada servidor app cachea in-process el hot key por 5 segundos.<br/>
+    3. <strong>Rate limiting</strong> por key en el nivel de aplicación.</p>
+  </div>
+
+  <div class="concept-block">
+    <h4>🔄 Cache Consistency — ¿Cuándo invalido?</h4>
+    <p>Cuando un usuario actualiza su perfil, ¿cuándo actualizo el cache? Tres opciones:<br/>
+    <strong>Invalidar en el write:</strong> <code>cache.delete("user:123")</code> — simple, consistente, pero el próximo read pega en DB.<br/>
+    <strong>Actualizar en el write:</strong> <code>cache.set("user:123", updated_data)</code> — consistente, pero puede haber race conditions.<br/>
+    <strong>TTL corto:</strong> Dejar que expire solo en 60 segundos — eventual consistency aceptable.</p>
+  </div>
+
+  <pre><code><span class="cm"># Ejemplo: Read-Through + Write-Invalidate (el más robusto)</span>
+<span class="kw">def</span> <span class="fn">update_user</span>(user_id, data):
+    <span class="cm"># 1. Actualiza en DB primero</span>
+    user = db.update(<span class="str">f"UPDATE users SET ... WHERE id={user_id}"</span>)
+
+    <span class="cm"># 2. Invalida el cache (no actualiza)</span>
+    cache.delete(<span class="str">f"user:{user_id}"</span>)
+
+    <span class="cm"># El próximo read va a poblar el cache fresco desde DB</span>
+    <span class="kw">return</span> user
+
+<span class="cm"># Redis config recomendada para producción</span>
+<span class="cm"># maxmemory 4gb</span>
+<span class="cm"># maxmemory-policy allkeys-lru</span>
+<span class="cm"># save 900 1  ← persistencia opcional</span></code></pre>
+
+</main>
+
+<footer>
+  <p>System Design Guide · <a href="../index.html">← Volver al inicio</a></p>
+</footer>
+
+</body>
+</html>

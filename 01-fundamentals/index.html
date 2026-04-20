@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fundamentos — System Design Guide</title>
+  <link rel="stylesheet" href="../styles/main.css" />
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="../index.html">⚡ System<span>Design</span></a>
+  <div class="nav-links">
+    <a href="../01-fundamentals/index.html" class="active">Fundamentos</a>
+    <a href="../02-components/index.html">Componentes</a>
+    <a href="../03-patterns/index.html">Patrones</a>
+    <a href="../04-databases/index.html">Bases de Datos</a>
+    <a href="../05-apis/index.html">APIs</a>
+    <a href="../06-case-studies/index.html">Casos Reales</a>
+    <a href="../07-infrastructure/index.html">Infraestructura</a>
+    <a href="../08-interview-prep/index.html">Entrevistas</a>
+    <a href="../09-resources/index.html">Recursos</a>
+    <a href="../10-advanced-topics/index.html">Avanzado</a>
+    <a href="../11-security/index.html">🔐 Seguridad</a>
+    <a href="../12-search/index.html">🔍 Search</a>
+    <a href="../13-soft-skills/index.html">🎭 Soft Skills</a>
+    <a href="../14-leetcode/index.html">⚡ LeetCode</a>
+    <a href="../15-ai-engineering/index.html">🤖 AI Eng</a>
+    <a href="../16-token-optimization/index.html">🪙 Tokens</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / Fundamentos</div>
+  <h1>🧱 Fundamentos de System Design</h1>
+  <p>Los pilares que todo diseño de sistemas respeta. Sin estos conceptos, ningún sistema escala.</p>
+</div>
+
+<main>
+
+  <!-- ESCALABILIDAD -->
+  <div class="section-title">Escalabilidad</div>
+  <p class="section-subtitle">La capacidad del sistema de manejar más carga aumentando recursos.</p>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <span class="card-icon">⬆️</span>
+      <h3>Vertical Scaling (Scale Up)</h3>
+      <p>Agregar más recursos a un servidor existente: más CPU, más RAM, más disco.</p>
+      <br/>
+      <div class="diagram">  [Server]              [BIGGER Server]
+  CPU: 4 cores    →    CPU: 64 cores
+  RAM: 16 GB           RAM: 512 GB
+  ✅ Simple            ❌ Límite físico
+  ✅ Sin código nuevo  ❌ SPOF
+  ✅ Bajo latencia     ❌ Costoso</div>
+    </div>
+    <div class="card">
+      <span class="card-icon">↔️</span>
+      <h3>Horizontal Scaling (Scale Out)</h3>
+      <p>Agregar más servidores al sistema. Requiere un Load Balancer para distribuir tráfico.</p>
+      <br/>
+      <div class="diagram">         [Load Balancer]
+        /       |       \
+  [S1]      [S2]      [S3]
+  ✅ Sin límite teórico
+  ✅ Alta disponibilidad
+  ❌ Más complejidad
+  ❌ Gestión de estado</div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <div class="callout-icon">💡</div>
+    <p><strong>Regla práctica:</strong> Empieza con vertical scaling (más simple), pero diseña pensando en horizontal desde el día uno. Los sistemas más grandes del mundo (Google, Amazon) escalan horizontalmente.</p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- MÉTRICAS CLAVE -->
+  <div class="section-title">Métricas Clave</div>
+  <p class="section-subtitle">Los números que definen si tu sistema funciona bien.</p>
+
+  <div class="grid grid-3">
+    <div class="concept-block">
+      <h4>⏱️ Latencia</h4>
+      <p>Tiempo en completar una operación. P50, P95, P99 (percentiles). Una API buena tiene P99 &lt; 200ms.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>📈 Throughput</h4>
+      <p>Operaciones por unidad de tiempo (QPS, RPS). Cuánto puede manejar el sistema en paralelo.</p>
+    </div>
+    <div class="concept-block purple">
+      <h4>🟢 Disponibilidad</h4>
+      <p>% de tiempo que el sistema está operativo. 99.9% = 8.7hs/año caído. 99.99% = 52min/año.</p>
+    </div>
+    <div class="concept-block orange">
+      <h4>🏋️ Durabilidad</h4>
+      <p>Los datos persisten incluso ante fallas. "Once written, never lost." Critical para storage.</p>
+    </div>
+    <div class="concept-block red">
+      <h4>🔒 Consistencia</h4>
+      <p>Todos los nodos ven los mismos datos al mismo tiempo. Strong vs eventual consistency.</p>
+    </div>
+    <div class="concept-block">
+      <h4>🔧 Tolerancia a Fallos</h4>
+      <p>El sistema continúa funcionando aunque fallen algunos componentes. Redundancia.</p>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>SLA</th>
+        <th>Disponibilidad</th>
+        <th>Downtime/año</th>
+        <th>Downtime/mes</th>
+        <th>Ejemplos</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>99%</td><td>"Two nines"</td><td>87.6 horas</td><td>7.3 horas</td><td>Apps internas</td></tr>
+      <tr><td>99.9%</td><td>"Three nines"</td><td>8.76 horas</td><td>43.8 min</td><td>SaaS estándar</td></tr>
+      <tr><td>99.99%</td><td>"Four nines"</td><td>52.6 min</td><td>4.4 min</td><td>AWS, Stripe</td></tr>
+      <tr><td>99.999%</td><td>"Five nines"</td><td>5.26 min</td><td>26 seg</td><td>Telecomunicaciones</td></tr>
+    </tbody>
+  </table>
+
+  <hr class="section-divider" />
+
+  <!-- CAP THEOREM -->
+  <div class="section-title">CAP Theorem</div>
+  <p class="section-subtitle">El principio más importante en sistemas distribuidos. Formulado por Eric Brewer en 2000.</p>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <p><strong>La regla:</strong> En un sistema distribuido con partición de red (Partition Tolerance), solo puedes elegir entre <strong>Consistency</strong> o <strong>Availability</strong>. No ambas al mismo tiempo.</p>
+  </div>
+
+  <div class="diagram">
+                    CAP THEOREM
+                    ___________
+                   /           \
+        Consistency              Availability
+           (C)                      (A)
+    Todos los nodos          El sistema responde
+    ven los mismos           siempre, aunque la
+    datos al mismo           data no esté 100%
+    tiempo                   actualizada
+
+                Partition Tolerance
+                      (P)
+           El sistema sigue funcionando
+           aunque falle la red entre nodos
+
+  ┌─────────────────────────────────────────────┐
+  │  CP (Consistency + Partition Tolerance)     │
+  │  → MongoDB, Redis, HBase, ZooKeeper         │
+  │  → Sacrifica: disponibilidad                │
+  │                                             │
+  │  AP (Availability + Partition Tolerance)    │
+  │  → Cassandra, DynamoDB, CouchDB             │
+  │  → Sacrifica: consistencia fuerte           │
+  │                                             │
+  │  CA (Consistency + Availability)            │
+  │  → Solo en sistemas NO distribuidos         │
+  │  → Bases de datos tradicionales (MySQL)     │
+  └─────────────────────────────────────────────┘</div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <span class="card-icon">🏦</span>
+      <h3>Cuándo elegir CP</h3>
+      <p>Sistemas financieros, reservas de vuelos, inventario. Cuando los datos incorrectos causan problemas graves. Prefieres estar offline que mostrar data desactualizada.</p>
+    </div>
+    <div class="card">
+      <span class="card-icon">📱</span>
+      <h3>Cuándo elegir AP</h3>
+      <p>Redes sociales, DNS, shopping carts. Cuando es aceptable mostrar data levemente desactualizada. La disponibilidad importa más que la perfección.</p>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- CONSISTENCIA -->
+  <div class="section-title">Modelos de Consistencia</div>
+  <p class="section-subtitle">Del más estricto al más relajado.</p>
+
+  <div class="concept-block">
+    <h4>🔒 Strong Consistency</h4>
+    <p>Después de un write, todos los reads ven el nuevo valor. La forma más estricta. Alta latencia. Usado en: Google Spanner, ZooKeeper.</p>
+  </div>
+  <div class="concept-block green">
+    <h4>📖 Read-your-writes Consistency</h4>
+    <p>Después de un write, el mismo cliente siempre lee su propio write. Otros clientes pueden ver datos viejos por un tiempo.</p>
+  </div>
+  <div class="concept-block purple">
+    <h4>🔄 Eventual Consistency</h4>
+    <p>El sistema eventualmente llegará a consistencia. Los writes se propagan a todos los nodos con un delay. Usado en: DynamoDB, Cassandra, DNS.</p>
+  </div>
+
+  <div class="diagram">  Strong Consistency:
+  Write → [Node A] → sync → [Node B] → sync → [Node C]
+  ✅ Todos ven el dato nuevo inmediatamente
+  ❌ Alta latencia (hay que esperar sync)
+
+  Eventual Consistency:
+  Write → [Node A]  [Node B: viejo]  [Node C: viejo]
+                ↓ (después de un tiempo)
+               [Node B: nuevo] [Node C: nuevo]
+  ✅ Baja latencia (responde inmediatamente)
+  ❌ Ventana de inconsistencia</div>
+
+  <hr class="section-divider" />
+
+  <!-- NÚMEROS QUE TODO INGENIERO DEBE SABER -->
+  <div class="section-title">Números que Todo Ingeniero Debe Saber</div>
+  <p class="section-subtitle">Jeff Dean (Google) — Latency Numbers Every Programmer Should Know</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Operación</th>
+        <th>Latencia</th>
+        <th>Comparación</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Acceso a registro de CPU (L1 cache)</td><td>0.5 ns</td><td>1 segundo</td></tr>
+      <tr><td>Branch mispredict</td><td>5 ns</td><td>10 segundos</td></tr>
+      <tr><td>L2 cache reference</td><td>7 ns</td><td>14 segundos</td></tr>
+      <tr><td>Mutex lock/unlock</td><td>25 ns</td><td>—</td></tr>
+      <tr><td>RAM reference</td><td>100 ns</td><td>3.3 minutos</td></tr>
+      <tr><td>Compress 1K bytes (Snappy)</td><td>3,000 ns</td><td>—</td></tr>
+      <tr><td>Read 1 MB sequentially from RAM</td><td>250,000 ns</td><td>—</td></tr>
+      <tr><td>Round trip dentro del mismo datacenter</td><td>500,000 ns</td><td>~8 minutos</td></tr>
+      <tr><td>Read 1 MB sequentially from SSD</td><td>1,000,000 ns</td><td>~16 min</td></tr>
+      <tr><td>Disk seek</td><td>10,000,000 ns</td><td>—</td></tr>
+      <tr><td>Read 1 MB sequentially from disk</td><td>20,000,000 ns</td><td>~5 días</td></tr>
+      <tr><td>Send packet CA→Netherlands→CA</td><td>150,000,000 ns</td><td>~4 años</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout success">
+    <div class="callout-icon">🎯</div>
+    <p><strong>Conclusión clave:</strong> La memoria RAM es ~200x más rápida que el disco. La red intercontinental es ~150x más lenta que la red dentro de un datacenter. Esto justifica el caching y los CDNs.</p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- ESTIMACIONES DE ESCALA -->
+  <div class="section-title">Estimaciones de Escala (Back-of-the-envelope)</div>
+  <p class="section-subtitle">Cómo calcular rápidamente los requerimientos de un sistema en una entrevista.</p>
+
+  <div class="concept-block">
+    <h4>📐 Ejemplo: Twitter — Calcular QPS y Storage</h4>
+    <p>300M usuarios activos mensuales · 50% usan diariamente · Promedio 2 tweets/día · 50% de tweets tienen media (1MB promedio)</p>
+  </div>
+
+  <div class="diagram">  USUARIOS ACTIVOS DIARIOS (DAU):
+  300M × 50% = 150M DAU
+
+  WRITE QPS (tweets por segundo):
+  150M × 2 tweets / 86,400 segundos ≈ 3,500 QPS
+  Peak QPS = 3,500 × 2 = ~7,000 QPS
+
+  STORAGE PARA TEXTO:
+  150M × 2 × 280 bytes = 84 GB/día = ~30 TB/año
+
+  STORAGE PARA MEDIA:
+  150M × 2 × 50% × 1 MB = 150 TB/día  ← ¡Enorme!
+
+  READ/WRITE RATIO:
+  Twitter: 100:1 (más reads que writes)
+  READ QPS = 7,000 × 100 = 700,000 QPS
+
+  CONCLUSIÓN:
+  → Necesitas agresivo caching para reads
+  → CDN para media
+  → Multiple DB shards para writes</div>
+
+  <hr class="section-divider" />
+
+  <!-- CONCEPTOS ADICIONALES -->
+  <div class="section-title">Otros Conceptos Fundamentales</div>
+
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>🔀 Load Balancing</h4>
+      <p>Distribuir tráfico entre múltiples servidores. Algoritmos: Round Robin, Weighted Round Robin, Least Connections, IP Hash. Puede ser L4 (TCP/UDP) o L7 (HTTP).</p>
+    </div>
+    <div class="concept-block green">
+      <h4>🌐 CDN (Content Delivery Network)</h4>
+      <p>Red de servidores distribuidos geográficamente que cachean contenido estático (imágenes, JS, CSS, videos) cerca del usuario final. Reduce latencia dramáticamente.</p>
+    </div>
+    <div class="concept-block purple">
+      <h4>🧩 Microservicios</h4>
+      <p>Dividir un sistema en servicios pequeños, independientes, con dominio propio. Escalan de forma independiente. Mayor complejidad operacional.</p>
+    </div>
+    <div class="concept-block orange">
+      <h4>📮 Async Processing</h4>
+      <p>En vez de procesar síncronamente, encolar la tarea y procesarla en background. Mejora throughput y user experience. Trade-off: eventual consistency.</p>
+    </div>
+    <div class="concept-block red">
+      <h4>🔁 Redundancia</h4>
+      <p>Tener múltiples instancias de cada componente para eliminar SPOF (Single Point of Failure). Active-Active o Active-Passive.</p>
+    </div>
+    <div class="concept-block">
+      <h4>💾 Data Partitioning</h4>
+      <p>Horizontal (sharding): dividir filas en múltiples tablas. Vertical: dividir columnas. Directory-based: lookup service para saber dónde está cada dato.</p>
+    </div>
+  </div>
+
+  <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+    <a class="card" href="../02-components/index.html" style="flex: 1; min-width: 200px;">
+      <span class="card-icon">⚙️</span>
+      <h3>Siguiente: Componentes Core →</h3>
+      <p>Load Balancers, Redis, Kafka, API Gateway.</p>
+    </a>
+    <a class="card" href="../08-interview-prep/index.html" style="flex: 1; min-width: 200px;">
+      <span class="card-icon">🎯</span>
+      <h3>Prep Entrevistas →</h3>
+      <p>Aplica estos conceptos en el framework de entrevistas.</p>
+    </a>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- CAP — FRAMEWORK PRÁCTICO (HelloInterview) -->
+  <div class="section-title">CAP en Práctica — Framework de Decisión</div>
+  <p class="section-subtitle">Basado en HelloInterview · Cómo elegir entre Consistency y Availability en sistemas reales.</p>
+
+  <div class="callout">
+    <div class="callout-icon">💡</div>
+    <p><strong>La clave:</strong> En cualquier sistema distribuido, la Partition Tolerance es inevitable — las redes fallan. La decisión real es: cuando hay una partición, ¿prefiero rechazar requests (CP) o servir datos potencialmente desactualizados (AP)?</p>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <span class="card-icon">🎫</span>
+      <h3>Cuándo elegir Consistency (CP)</h3>
+      <p>Cuando los datos incorrectos generan problemas reales de negocio:</p>
+      <ul style="margin-top: 0.75rem; padding-left: 1.2rem; color: var(--text-muted); font-size: 0.9rem; line-height: 2;">
+        <li><strong>Ticket booking:</strong> dos usuarios no pueden comprar el mismo asiento</li>
+        <li><strong>Inventario e-commerce:</strong> no vender stock que no existe</li>
+        <li><strong>Trading financiero:</strong> precios stale generan pérdidas reales</li>
+        <li><strong>Transferencias bancarias:</strong> el saldo debe ser exacto</li>
+      </ul>
+      <div style="margin-top: 0.75rem;"><span class="tag tag-blue">PostgreSQL · Redis · ZooKeeper</span></div>
+    </div>
+    <div class="card">
+      <span class="card-icon">📱</span>
+      <h3>Cuándo elegir Availability (AP)</h3>
+      <p>Cuando estar online importa más que la perfección de los datos:</p>
+      <ul style="margin-top: 0.75rem; padding-left: 1.2rem; color: var(--text-muted); font-size: 0.9rem; line-height: 2;">
+        <li><strong>Redes sociales:</strong> ver un perfil con 5 minutos de delay es aceptable</li>
+        <li><strong>Streaming:</strong> descripción de un video levemente desactualizada, ok</li>
+        <li><strong>Reviews/ratings:</strong> brief staleness tolerable</li>
+        <li><strong>DNS:</strong> propagación lenta es aceptable</li>
+      </ul>
+      <div style="margin-top: 0.75rem;"><span class="tag tag-orange">Cassandra · DynamoDB · CouchDB</span></div>
+    </div>
+  </div>
+
+  <div class="concept-block purple">
+    <h4>🔀 Estrategia Híbrida (Lo que usan los mejores sistemas)</h4>
+    <p>Muchos sistemas modernos aplican <strong>Consistency para operaciones críticas</strong> y <strong>Availability para features secundarios</strong>. Ejemplo en una app de citas: matching de usuarios → CP (no puedes matchear a alguien dos veces). Visualización del perfil → AP (mostramos el perfil aunque esté levemente desactualizado).</p>
+  </div>
+
+  <div class="diagram">  EJEMPLO: Sistema de Reservas de Vuelos
+
+  CRÍTICO (CP — Consistency):
+  Reserva de asiento → Transacción ACID en PostgreSQL
+  Si hay partición → Rechaza el request (mejor error que double-booking)
+  ┌────────────────────────────────────┐
+  │  User A y B intentan asiento 14A  │
+  │  Transacción con lock             │
+  │  Solo uno gana → el otro recibe   │
+  │  HTTP 409 Conflict                 │
+  └────────────────────────────────────┘
+
+  NO CRÍTICO (AP — Availability):
+  Historial de vuelos del usuario → Cassandra
+  Si hay partición → Mostramos lo que tenemos (eventual consistency)
+  ┌────────────────────────────────────┐
+  │  Tu historial puede estar          │
+  │  desactualizado por segundos/min  │
+  │  → No es un problema de negocio   │
+  └────────────────────────────────────┘</div>
+
+  <hr class="section-divider" />
+
+  <!-- CONSISTENT HASHING — Alex Xu Cap 5 -->
+  <div class="section-title">Consistent Hashing</div>
+  <p class="section-subtitle">Basado en "System Design Interview" Alex Xu Cap. 5 · El algoritmo que resuelve el resharding.</p>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <p><strong>El problema del hash simple:</strong> Si tienes 4 servidores y usas <code>hash(key) % 4</code>, agregar un 5to servidor invalida el 80% de los keys. Consistent hashing minimiza ese impacto a ~1/N keys.</p>
+  </div>
+
+  <div class="diagram">  CONSISTENT HASHING — El Ring:
+
+  Imagina un anillo de 0 a 2^32:
+
+              0 / 2^32
+                 │
+        S3 ← ───┼─── → S0
+       /         │         \
+      /     Ring (hash     \
+     /       space)         \
+    S2 ←─────────────────── S1
+
+  Cada KEY se mapea al PRIMER servidor en sentido horario.
+  Key "user:123" → hash → posición en el ring → Server S1
+
+  CUANDO AGREGAS UN SERVIDOR S4:
+  Solo los keys entre S3 y S4 se mueven → ~1/N impacto (25% no 80%!)
+
+  VIRTUAL NODES (para distribución uniforme):
+  Cada servidor físico tiene múltiples posiciones en el ring:
+  S0: posiciones 0, 45, 90, 180
+  S1: posiciones 30, 75, 120, 210
+  → Distribución más pareja</div>
+
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>✅ Ventajas</h4>
+      <p>Agregar/quitar servidores solo redistribuye ~K/N keys (K = total keys, N = servidores). Sin downtime para resharding. Usado en Amazon DynamoDB, Apache Cassandra, Discord.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>🎯 Casos de Uso</h4>
+      <p>Distributed caches (Redis Cluster). Load balancing cuando necesitas afinidad. Distributed databases para determinar en qué shard va cada key.</p>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <p>System Design Guide · <a href="../index.html">← Volver al inicio</a></p>
+</footer>
+
+</body>
+</html>

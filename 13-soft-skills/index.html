@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Soft Skills & Estrategia — System Design Guide</title>
+  <link rel="stylesheet" href="../styles/main.css" />
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="../index.html">⚡ System<span>Design</span></a>
+  <div class="nav-links">
+    <a href="../01-fundamentals/index.html">Fundamentos</a>
+    <a href="../02-components/index.html">Componentes</a>
+    <a href="../03-patterns/index.html">Patrones</a>
+    <a href="../04-databases/index.html">Bases de Datos</a>
+    <a href="../05-apis/index.html">APIs</a>
+    <a href="../06-case-studies/index.html">Casos Reales</a>
+    <a href="../07-infrastructure/index.html">Infraestructura</a>
+    <a href="../08-interview-prep/index.html">Entrevistas</a>
+    <a href="../09-resources/index.html">Recursos</a>
+    <a href="../10-advanced-topics/index.html">Avanzado</a>
+    <a href="../11-security/index.html">🔐 Seguridad</a>
+    <a href="../12-search/index.html">🔍 Search</a>
+    <a href="../13-soft-skills/index.html" class="active">🎭 Soft Skills</a>
+    <a href="../14-leetcode/index.html">⚡ LeetCode</a>
+    <a href="../15-ai-engineering/index.html">🤖 AI Eng</a>
+    <a href="../16-token-optimization/index.html">🪙 Tokens</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / Soft Skills &amp; Estrategia</div>
+  <h1>🎭 Soft Skills &amp; Estrategia de Entrevistas</h1>
+  <p>Lo que separa al candidato que sabe del candidato que consigue el trabajo. Basado en Silver.dev (Gabriel Benmergui) + experiencia real de ingenieros de FAANG.</p>
+</div>
+
+<main>
+
+  <!-- LA MENTALIDAD CORRECTA -->
+  <div class="section-title">La Mentalidad Correcta</div>
+  <p class="section-subtitle">El error más común antes de la primera pantalla.</p>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <p><strong>El error:</strong> Pensar que la entrevista es el pitch de la empresa hacia vos. Es al revés. <strong>Vos sos el que pitchea.</strong> Cada pantalla es tu oportunidad de demostrar que sos la persona que quieren conocer más. El criterio de éxito es simple: que quieran seguir hablando con vos.</p>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>Mindset equivocado</h4>
+      <p>
+        "Voy a ver de qué se trata."<br/>
+        "Si me rechazan, no era para mí."<br/>
+        "Con mi experiencia, deberían querer contratarme."<br/>
+        "No me preparé mucho, es solo un screening."
+      </p>
+    </div>
+    <div class="concept-block green">
+      <h4>Mindset correcto</h4>
+      <p>
+        "Esta es mi oportunidad de conseguir el rol. Me preparo como tal."<br/>
+        "Investigo la empresa, el producto, el entrevistador."<br/>
+        "Cada interacción cuenta — desde el primer email."<br/>
+        "Un screening bien hecho abre 5 puertas más."
+      </p>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- CONSEGUIR ENTREVISTAS -->
+  <div class="section-title">Cómo Conseguir Entrevistas</div>
+  <p class="section-subtitle">La búsqueda pasiva no funciona. Estrategia activa + múltiples canales.</p>
+
+  <div class="concept-block">
+    <h4>Setup antes de empezar a buscar</h4>
+    <p>
+      <strong>Calendly o Google Calendar:</strong> Slots de 30 min disponibles. Cuando un recruiter pregunta "¿cuándo podés?", mandás el link — no vas y venís por email 3 días.<br/>
+      <strong>Grammarly:</strong> Para communications profesionales sin errores.<br/>
+      <strong>CV actualizado:</strong> Un solo archivo PDF, sin foto en mercados anglosajones.<br/>
+      <strong>LinkedIn activo:</strong> Open to Work (solo visible para recruiters), headline con tu stack.
+    </p>
+  </div>
+
+  <div class="diagram">  CANALES DE BÚSQUEDA (de mayor a menor conversión):
+
+  1. RED PERSONAL (conversión: 50%+)
+     → Avisale explícitamente a colegas que estás buscando
+     → "Estoy buscando rol de Senior Backend en fintech/SaaS"
+     → Muchos no saben hasta que lo decís en voz alta
+
+  2. REFERIDOS INTERNOS (conversión: 30%)
+     → Buscá countrymen en empresas que te interesan (LinkedIn)
+     → Mensaje directo: "Vi que trabajás en X. Estoy aplicando.
+        ¿Podés darme contexto del proceso? ¿Te importa referenciarme?"
+     → Un referido interno multiplica las chances x5
+
+  3. JOB BOARDS DIRECTOS (conversión: 5-10%)
+     → LinkedIn Jobs, Wellfound (ex-AngelList), HackerNews "Who is Hiring"
+     → Y Combinator job board para startups
+     → Greenhouse/Ashby/Lever (ATS que usan las empresas)
+
+  4. OUTREACH A FOUNDERS/HIRING MANAGERS (conversión: 15%)
+     → Email directo: [nombre]@[dominio].com
+     → Template: rol que querés, por qué esa empresa específica,
+        2 logros cuantificados, link a calendly
+     → Breve. Personalizado. No genérico.
+
+  5. CONSULTORAS/INTERMEDIARIOS (conversión: variable)
+     → Howdy, Arc.dev, Turing, Lemon.io, TopTal
+     → Buena opción para roles en empresas USA remotas
+     → Ellos hacen el matching, vos pasás su proceso de evaluación</div>
+
+  <div class="concept-block green">
+    <h4>Template de outreach a un founder o hiring manager</h4>
+    <p>Subject: <em>Senior Backend Engineer — Interested in [Nombre Empresa]</em></p>
+  </div>
+  <pre><code><span class="cm">Hola [Nombre],</span>
+
+<span class="cm">Vi que [Empresa] está buscando un Senior Backend Engineer y me interesa</span>
+<span class="cm">genuinamente por [razón específica de negocio/producto — no genérica].</span>
+
+<span class="cm">Sobre mí:</span>
+<span class="cm">· 6 años en backend Python/Go, últimos 3 en sistemas distribuidos</span>
+<span class="cm">· Diseñé el pipeline de ingesta que redujo latencia de 800ms → 120ms en [Empresa X]</span>
+<span class="cm">· Lideré la migración de monolito a microservicios para un equipo de 8</span>
+
+<span class="cm">¿Tiene sentido hablar 20 minutos?</span>
+<span class="cm">Mi calendly: [link]</span>
+
+<span class="cm">Saludos,</span>
+<span class="cm">[Tu nombre]</span></code></pre>
+
+  <div class="callout">
+    <div class="callout-icon">💡</div>
+    <p><strong>Clave del outreach:</strong> La razón por la que te interesa la empresa debe ser específica. "Me interesa el problema que resuelven con X feature" es infinitamente mejor que "me interesa trabajar en una empresa innovadora".</p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- EL SCREENING CALL -->
+  <div class="section-title">El Screening Call — La Primera Impresión</div>
+  <p class="section-subtitle">Basado en la Guía de Screening de Silver.dev. La primera llamada decide si seguís en el proceso.</p>
+
+  <div class="section-title" style="font-size: 1.2rem; margin-top: 0;">Setup Profesional</div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <span class="card-icon">💻</span>
+      <h3>Hardware</h3>
+      <ul style="margin-top:0.5rem; padding-left:1.2rem; color:var(--text-muted); font-size:0.88rem; line-height:2.2;">
+        <li>Micrófono de calidad — no Airpods (calidad subóptima)</li>
+        <li>Webcam dedicada (no la del laptop) si podés</li>
+        <li>Conexión cableada o WiFi estable (nunca desde un café)</li>
+        <li>Monitor con buena iluminación frontal</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="card-icon">🏠</span>
+      <h3>Entorno</h3>
+      <ul style="margin-top:0.5rem; padding-left:1.2rem; color:var(--text-muted); font-size:0.88rem; line-height:2.2;">
+        <li>Habitación ordenada y limpia — comunica productividad</li>
+        <li>Luz natural o iluminación frontal — no contra-luz</li>
+        <li>Sin personas ni ruidos detrás</li>
+        <li>Sin fondos virtuales — implica que estás tapando algo</li>
+        <li>Mascotas, niños, timbres: todo gestionado antes</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="concept-block red">
+    <h4>Antes de la llamada: checklist técnico</h4>
+    <p>
+      ✓ Probar audio y video 10 minutos antes<br/>
+      ✓ Dar permisos a Zoom/Meet/Teams (no descubrir esto en la llamada)<br/>
+      ✓ Cerrar Slack, WhatsApp, Discord — no pueden aparecer notificaciones<br/>
+      ✓ Deshabilitar AI notetakers (puede incomodar a la empresa)<br/>
+      ✓ Tener el CV a mano (en caso de que pregunten detalles)<br/>
+      ✓ Agua cerca — pero sin hacer ruido al tomar
+    </p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- INVESTIGACIÓN PRE-ENTREVISTA -->
+  <div class="section-title">Investigación Pre-Entrevista</div>
+  <p class="section-subtitle">La diferencia entre un candidato genérico y uno memorable. Esto toma 30-45 minutos y multiplica tus chances.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>Investigar el Producto</h4>
+        <p>Si es B2C: instalalo, usalo, compralo si es razonable. Si es B2B: pedí un trial o mirá demos en YouTube/G2. Identificá: ¿qué problema resuelven? ¿qué funciona bien? ¿qué cambiarías? Esto te da material para la pregunta "¿por qué esta empresa?".</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>Investigar la Empresa</h4>
+        <p>Revenue estimado (Crunchbase, Glassdoor). Ronda de financiamiento y quiénes son los inversores. Cuántos ingenieros hay (LinkedIn). Stack técnico (StackShare, job postings, GitHub). Crecimiento reciente (¿están contratando mucho o hay freeze?). Competidores principales.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>Investigar al Entrevistador</h4>
+        <p>LinkedIn: background técnico o HR. Años en la empresa. Artículos o talks que haya dado. Qué tipo de preguntas hace (buscar en Glassdoor). ¿Es el hiring manager? ¿Será tu manager directo? Esto te ayuda a adaptar tu tono y nivel de profundidad técnica.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h4>Preparar Preguntas Inteligentes</h4>
+        <p>Tener 3-4 preguntas que demuestren que investigaste. No preguntes lo que está en la web. Las mejores preguntas son las que solo alguien adentro puede responder. Ejemplo: "Vi que están migrando hacia [tech X] según sus job postings — ¿cuál es la visión detrás de eso?"</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="concept-block orange">
+    <h4>Preguntas inteligentes para hacer al final</h4>
+    <p>
+      · "¿Qué hace que alguien sea exitoso en este equipo en los primeros 3 meses?"<br/>
+      · "¿Cuál es el mayor desafío técnico que enfrentará la persona en este rol?"<br/>
+      · "¿Cómo es el proceso de toma de decisiones técnicas en el equipo?"<br/>
+      · "¿Qué es lo que más te gusta de trabajar acá?" (al interviewer mismo)<br/>
+      · "¿Cómo define el equipo éxito para este rol?"
+    </p>
+  </div>
+
+  <div class="concept-block red">
+    <h4>Preguntas que nunca hacer en un screening</h4>
+    <p>
+      · "¿Cuánto paga?" (demasiado temprano — salvo que el recruiter lo haya traído)<br/>
+      · "¿Cuántos días de vacaciones tienen?" (da señal equivocada)<br/>
+      · "¿Puedo trabajar desde donde quiera?" (negocialo después de tener la oferta)<br/>
+      · Cualquier pregunta que está respondida en la web o job posting
+    </p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- PRESENTACIÓN PERSONAL -->
+  <div class="section-title">La Presentación Personal — "Tell Me About Yourself"</div>
+  <p class="section-subtitle">La pregunta más importante y más desperdiciada. Tenés 3 minutos para enganchar al entrevistador.</p>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <p><strong>El error más común:</strong> Recitar el CV cronológicamente. "Empecé en 2015 en empresa X, luego en 2018 me fui a Y..." Nadie quiere escuchar eso. El interviewer ya leyó el CV. Quiere entender POR QUÉ sos interesante para ESTE rol.</p>
+  </div>
+
+  <div class="diagram">  ESTRUCTURA DE PRESENTACIÓN PERSONAL (menos de 3 minutos):
+
+  1. QUIÉN SOS HOY (30 segundos):
+     "Soy un senior backend engineer con 6 años de experiencia,
+      especializado en sistemas distribuidos y APIs de alta disponibilidad."
+
+  2. TU LOGRO MÁS RELEVANTE (45 segundos):
+     "En [empresa anterior], lideré el rediseño del pipeline de procesamiento
+      de pagos que manejaba $2M diarios. Redujimos la latencia de 800ms a 120ms
+      y eliminamos los timeouts que costaban $50K mensuales en chargebacks."
+
+  3. POR QUÉ ESTE ROL/EMPRESA (45 segundos):
+     "Me interesa [empresa] porque están resolviendo [problema específico]
+      y veo que el stack usa [tech X] para [caso de uso Y], que es exactamente
+      el tipo de desafíos que quiero seguir atacando."
+
+  4. CIERRE (15 segundos):
+     "Estoy buscando un equipo donde pueda seguir creciendo en [área]
+      y aportar experiencia en [área específica]."
+
+  TOTAL: ~2-2:30 minutos. Conciso, relevante, memorable.
+
+  ─────────────────────────────────────────────────────────
+
+  LO QUE NO VA en la presentación:
+  ❌ "Nací en Argentina y estudié sistemas..."
+  ❌ "Siempre me gustó la tecnología desde chico..."
+  ❌ Tecnologías sin contexto: "conozco Python, Java, Go, Rust..."
+  ❌ Más de 3 minutoss</div>
+
+  <hr class="section-divider" />
+
+  <!-- BEHAVIORAL QUESTIONS -->
+  <div class="section-title">Behavioral Questions — Las 8 Preguntas Clásicas</div>
+  <p class="section-subtitle">Basado en el framework de Silver.dev. El 90% de las behavioral interviews giran en torno a estas preguntas.</p>
+
+  <div class="concept-block">
+    <h4>El Framework STAR</h4>
+    <p>
+      <strong>S — Situation:</strong> Contexto breve. ¿Dónde, cuándo, cuál era el escenario? (15%)<br/>
+      <strong>T — Task:</strong> Tu responsabilidad específica en esa situación. (10%)<br/>
+      <strong>A — Action:</strong> Lo que VOS hiciste. Primero persona singular, no "hicimos". (60%)<br/>
+      <strong>R — Result:</strong> El resultado, idealmente cuantificado. (15%)
+    </p>
+  </div>
+
+  <div class="callout">
+    <div class="callout-icon">💡</div>
+    <p><strong>Tip de Silver.dev:</strong> Grabate respondiendo estas preguntas con Loom y miralo. Te vas a dar cuenta de los tics verbales, el ritmo y la estructura mucho mejor que leyéndolo. Hacelo al menos una vez antes de cualquier entrevista importante.</p>
+  </div>
+
+  <div class="concept-block">
+    <h4>1. "Tell me about yourself" / "Presentate"</h4>
+    <p>Ver sección anterior. Máximo 3 minutos. Foco en lo relevante para ESTE rol. Énfasis en logros, no en historia cronológica.</p>
+  </div>
+
+  <div class="concept-block green">
+    <h4>2. "¿Por qué te interesa esta posición/empresa?"</h4>
+    <p>
+      <strong>Lo que quieren escuchar:</strong> Que conocés el producto, que entendés el problema que resuelven, que hay una razón genuina más allá del salario.<br/>
+      <strong>Template:</strong> "Me interesa [empresa] porque [razón de negocio/producto específica]. Particularmente me llama la atención que [feature/decisión técnica específica]. Y el rol encaja con lo que quiero desarrollar: [skill/área]."<br/>
+      <strong>Nunca decir:</strong> "Busco crecimiento profesional" (genérico), "el salario es bueno" (demasiado temprano).
+    </p>
+  </div>
+
+  <div class="concept-block purple">
+    <h4>3. "Contame un ejemplo donde demostraste [valor de la empresa]"</h4>
+    <p>
+      <strong>Preparación:</strong> Leer los values de la empresa en la web. Tener 2-3 historias listas que puedan mapearse a distintos values.<br/>
+      <strong>Estructura:</strong> STAR completo. La historia debe terminar con el impacto cuantificado.<br/>
+      <strong>Truco:</strong> Una buena historia puede servir para múltiples preguntas behavioral cambiando el énfasis.
+    </p>
+  </div>
+
+  <div class="concept-block orange">
+    <h4>4. "Describí un desacuerdo con tu manager o equipo"</h4>
+    <p>
+      <strong>Qué evalúan:</strong> Que podés manejar conflictos de forma madura, que tenés opiniones propias, que podés ceder cuando corresponde.<br/>
+      <strong>Estructura:</strong> Describí el desacuerdo, qué argumentos presentaste, cómo se resolvió, y el resultado.<br/>
+      <strong>Evitar:</strong> Hablar mal de la persona ("mi manager era un idiota"). Decir que nunca tenés desacuerdos (poco creíble). Historias donde vos tenés toda la razón y el otro todo el error.
+    </p>
+  </div>
+
+  <div class="concept-block red">
+    <h4>5. "¿Cómo manejarías a un compañero que no performa bien?"</h4>
+    <p>
+      <strong>Qué evalúan:</strong> Liderazgo, comunicación directa, empatía, ownership del equipo.<br/>
+      <strong>Respuesta ideal:</strong> Primero entender el contexto (¿hay algo personal? ¿tiene los recursos?), conversación 1:1 directa y honesta, feedback específico y accionable, involucrar al manager solo si no hay progreso después de intentarlo vos.<br/>
+      <strong>Evitar:</strong> "Le diría al manager directamente" sin intentar hablar con la persona primero.
+    </p>
+  </div>
+
+  <div class="concept-block">
+    <h4>6. "¿Cuál fue tu mayor desafío técnico?"</h4>
+    <p>
+      <strong>Qué evalúan:</strong> Profundidad técnica, problem-solving, cómo explicás complejidad.<br/>
+      <strong>Estructura:</strong> Contexto del sistema, el problema específico (con números), opciones que consideraste, qué elegiste y por qué (trade-offs), resultado.<br/>
+      <strong>Nivel senior:</strong> El desafío debe involucrar decisiones de arquitectura, no solo código. "Elegí Kafka sobre RabbitMQ porque..." demuestra más seniority que "debuggeé un memory leak".
+    </p>
+  </div>
+
+  <div class="concept-block orange">
+    <h4>7. "Contame sobre un proyecto que falló"</h4>
+    <p>
+      <strong>Qué evalúan:</strong> Ownership, capacidad de aprender de errores, honestidad, madurez.<br/>
+      <strong>La trampa:</strong> Candidatos que no tienen ningún fracaso (poco creíble) o que culpan a otros completamente.<br/>
+      <strong>Respuesta ideal:</strong> Fracaso real donde vos tuviste responsabilidad parcial. Qué salió mal, qué aprendiste, qué cambiarías. Terminar en la lección aprendida — no en el fracaso.
+    </p>
+  </div>
+
+  <div class="concept-block green">
+    <h4>8. "¿Tenés preguntas para nosotros?"</h4>
+    <p>
+      <strong>Nunca decir "No, estoy bien".</strong> Es una señal de falta de interés.<br/>
+      Siempre tener 3-4 preguntas preparadas. Ver sección de preguntas inteligentes arriba.<br/>
+      Si te respondieron alguna en la entrevista, decirlo: "Esta ya la respondiste pero tengo otra..."
+    </p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- CULTURA AMERICANA -->
+  <div class="section-title">Entrevistando con Empresas de USA — Cultura Americana</div>
+  <p class="section-subtitle">Las diferencias culturales que pueden costarte una oferta si no las conocés.</p>
+
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>Comunicación directa y positiva</h4>
+      <p>
+        En la cultura anglosajona, la modestia excesiva se interpreta como inseguridad, no como humildad.<br/>
+        <strong>Evitar:</strong> "Bueno, no sé si es tan impresionante, pero..."<br/>
+        <strong>Preferir:</strong> "Lideré X que resultó en Y."<br/>
+        No hay que exagerar, pero sí presentar los logros con confianza y claridad.
+      </p>
+    </div>
+    <div class="concept-block green">
+      <h4>Ownership y "I" vs "We"</h4>
+      <p>
+        Los entrevistadores americanos quieren saber qué hiciste VOS, no el equipo.<br/>
+        <strong>Evitar:</strong> "Nosotros implementamos..." (no queda claro tu rol)<br/>
+        <strong>Preferir:</strong> "Yo diseñé la arquitectura. El equipo implementó basado en ese diseño."<br/>
+        Podés dar crédito al equipo, pero primero establecé tu contribución específica.
+      </p>
+    </div>
+    <div class="concept-block purple">
+      <h4>Small talk y warmup</h4>
+      <p>
+        Las entrevistas americanas suelen empezar con 2-5 minutos de charla casual.<br/>
+        "How are you?", "Did you have a good week?", "Where are you calling from?"<br/>
+        Respondé con energía positiva. No seas frío ni transaccional. Este momento importa — el interviewer empieza a formar opinión desde el primer segundo.
+      </p>
+    </div>
+    <div class="concept-block orange">
+      <h4>Energía y entusiasmo</h4>
+      <p>
+        El candidato latinoamericano tiende a ser más contenido emocionalmente que el promedio americano en contexto profesional.<br/>
+        En entrevistas con empresas de USA, mostrar entusiasmo genuino por el rol y el producto se espera y valora.<br/>
+        No es necesario exagerar, pero sí que se note que te interesa.
+      </p>
+    </div>
+  </div>
+
+  <div class="diagram">  LO QUE FUNCIONA EN EMPRESAS LATAM vs USA:
+
+  LATAM:                          USA/Global:
+  "Trabajamos en equipo..."  →    "Yo diseñé / yo lideré / yo propuse..."
+  "Soy bastante técnico..."  →    "Tengo experiencia en X, Y, Z: acá un ejemplo..."
+  "Estoy disponible cuando   →    "Aquí está mi Calendly para la próxima semana."
+   ustedes quieran..."
+  "Me lo pensaré..."         →    Dar respuesta en el mismo día, siempre
+  "No quisiera molestar..."  →    Follow-up por email 24-48hs después es esperado</div>
+
+  <hr class="section-divider" />
+
+  <!-- NEGOCIACIÓN SALARIAL -->
+  <div class="section-title">Negociación Salarial</div>
+  <p class="section-subtitle">El momento más ignorado del proceso. La mejor negociación pasa cuando ya tenés la oferta.</p>
+
+  <div class="callout">
+    <div class="callout-icon">💡</div>
+    <p><strong>Principio fundamental:</strong> No des el primer número. Quien da el primer número, negocia desde una posición de desventaja. Si te preguntan "¿cuánto estás buscando?", la respuesta ideal es devolver la pregunta.</p>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>Cuando preguntan "¿qué compensación buscás?"</h4>
+        <p>"Estoy explorando opciones y me gustaría entender primero el alcance completo del rol y el paquete que tienen en mente. ¿Pueden compartir el rango que tienen presupuestado para esta posición?"</p>
+        <p style="margin-top:0.5rem; color:var(--text-muted); font-size:0.88rem;">Si insisten: dá un rango donde tu mínimo sea el número bajo. Nunca el rango real.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>Cuando llegue la oferta</h4>
+        <p>Nunca aceptes en el momento. "Muchas gracias, me entusiasma la oferta. ¿Pueden darme 48-72 horas para revisarla?" — esto es completamente normal y esperado. Usá ese tiempo para investigar, comparar y preparar la contra-oferta.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>La contra-oferta</h4>
+        <p>"Estoy muy entusiasmado con el rol y el equipo. Tomé el tiempo para revisar la oferta y, basado en mi experiencia en [área X] y [logro Y], había pensado en [número 15-20% más alto]. ¿Hay flexibilidad?"</p>
+        <p style="margin-top:0.5rem; color:var(--text-muted); font-size:0.88rem;">La mayoría de las empresas esperan que negocies. Un "no" es el peor caso — quedás igual que antes.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h4>Qué negociar además del salario</h4>
+        <p>Equity/RSUs, signing bonus, días de vacaciones, home office budget, learning budget, fecha de start. Si el salario tiene techo, negociá el resto. El signing bonus suele tener más flexibilidad que el salario base.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="concept-block green">
+    <h4>Leverage real en la negociación</h4>
+    <p>
+      El mejor leverage es tener múltiples ofertas simultáneas.<br/>
+      <strong>"Tengo otra oferta en proceso con un rango de X"</strong> es la frase más poderosa en una negociación salarial.<br/>
+      Por eso la búsqueda activa en múltiples canales simultáneamente no es solo por cantidad — es para tener opciones reales que te den poder de negociación.
+    </p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- DESPUÉS DE LA ENTREVISTA -->
+  <div class="section-title">Post-Entrevista — El Follow-Up</div>
+  <p class="section-subtitle">El 90% de los candidatos no hace esto. Los que lo hacen se destacan.</p>
+
+  <div class="concept-block">
+    <h4>Email de follow-up (dentro de las 24hs)</h4>
+    <p>Un email breve agradeciendo el tiempo, mencionando algo específico de la conversación que te resonó, y reiterando tu interés. No genérico — tiene que referir a algo que pasó en la entrevista.</p>
+  </div>
+
+  <pre><code><span class="cm">Asunto: Re: [Nombre Empresa] — Senior Backend Engineer Interview</span>
+
+<span class="cm">Hola [Nombre],</span>
+
+<span class="cm">Gracias por el tiempo hoy. Quedé pensando en lo que mencionaste sobre</span>
+<span class="cm">[algo específico que dijo — el desafío de escalar X, la visión de Y, etc.].</span>
+<span class="cm">Me genera muchas ganas de trabajar en ese problema.</span>
+
+<span class="cm">Si necesitás cualquier información adicional de mi parte, estoy disponible.</span>
+<span class="cm">Espero noticias.</span>
+
+<span class="cm">Saludos,</span>
+<span class="cm">[Nombre]</span></code></pre>
+
+  <div class="callout success">
+    <div class="callout-icon">🎯</div>
+    <p><strong>Si no tenés respuesta en 5-7 días:</strong> Un follow-up más es completamente aceptable. "Quería asegurarme de que recibieron mi email. Sigo muy interesado en el proceso." Después de eso, si no hay respuesta, podés asumir que siguieron con otros candidatos y enfocar energía en otras oportunidades.</p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- CHECKLIST FINAL -->
+  <div class="section-title">Checklist Completo — Antes de Cada Entrevista</div>
+
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>48-72hs antes</h4>
+      <ul class="checklist">
+        <li>Investigar empresa: producto, revenue, stack, tamaño equipo</li>
+        <li>Investigar al entrevistador en LinkedIn</li>
+        <li>Preparar 3-4 preguntas inteligentes</li>
+        <li>Repasar tus logros más relevantes para este rol</li>
+        <li>Preparar historias STAR para behavioral questions</li>
+        <li>Practicar la presentación personal en voz alta</li>
+      </ul>
+    </div>
+    <div class="concept-block green">
+      <h4>El día de la entrevista</h4>
+      <ul class="checklist">
+        <li>Probar audio, video y conexión</li>
+        <li>Entorno ordenado e iluminado</li>
+        <li>Cerrar Slack, WhatsApp, Discord, notificaciones</li>
+        <li>CV a mano por si hay preguntas específicas</li>
+        <li>Papel y lapiz para tomar notas</li>
+        <li>Agua cerca</li>
+        <li>Entrar 2-3 minutos antes del horario</li>
+      </ul>
+    </div>
+    <div class="concept-block purple">
+      <h4>Después de la entrevista</h4>
+      <ul class="checklist">
+        <li>Email de follow-up dentro de las 24hs</li>
+        <li>Anotar qué preguntas te hicieron y cómo respondiste</li>
+        <li>Identificar qué mejorar para la próxima</li>
+        <li>Si hay oferta: nunca aceptar en el momento (48-72hs)</li>
+        <li>Si hay rechazo: pedir feedback (a veces lo dan)</li>
+      </ul>
+    </div>
+    <div class="concept-block orange">
+      <h4>Mentalidad durante el proceso</h4>
+      <ul class="checklist">
+        <li>Buscar en múltiples canales simultáneamente (nunca one-at-a-time)</li>
+        <li>Trackear en una spreadsheet: empresa, contacto, fecha, status</li>
+        <li>Tratar los rechazos como practice — no como fracasos</li>
+        <li>Iterar el approach basándose en feedback real</li>
+        <li>El proceso de búsqueda es un sistema, no un evento</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+    <a class="card" href="../08-interview-prep/index.html" style="flex: 1; min-width: 200px;">
+      <span class="card-icon">🎯</span>
+      <h3>← System Design Interview Prep</h3>
+      <p>Framework de 7 pasos, casos reales, errores técnicos.</p>
+    </a>
+    <a class="card" href="../09-resources/index.html" style="flex: 1; min-width: 200px;">
+      <span class="card-icon">📖</span>
+      <h3>Recursos →</h3>
+      <p>Silver.dev, libros, cursos y más recursos curados.</p>
+    </a>
+  </div>
+
+</main>
+
+<footer>
+  <p>System Design Guide · Contenido de soft skills basado en <strong>Silver.dev</strong> (Gabriel Benmergui) · <a href="../index.html">← Volver al inicio</a></p>
+</footer>
+
+</body>
+</html>

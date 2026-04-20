@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patrones de Arquitectura — System Design Guide</title>
+  <link rel="stylesheet" href="../styles/main.css" />
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="../index.html">⚡ System<span>Design</span></a>
+  <div class="nav-links">
+    <a href="../01-fundamentals/index.html">Fundamentos</a>
+    <a href="../02-components/index.html">Componentes</a>
+    <a href="../03-patterns/index.html" class="active">Patrones</a>
+    <a href="../04-databases/index.html">Bases de Datos</a>
+    <a href="../05-apis/index.html">APIs</a>
+    <a href="../06-case-studies/index.html">Casos Reales</a>
+    <a href="../07-infrastructure/index.html">Infraestructura</a>
+    <a href="../08-interview-prep/index.html">Entrevistas</a>
+    <a href="../09-resources/index.html">Recursos</a>
+    <a href="../10-advanced-topics/index.html">Avanzado</a>
+    <a href="../11-security/index.html">🔐 Seguridad</a>
+    <a href="../12-search/index.html">🔍 Search</a>
+    <a href="../13-soft-skills/index.html">🎭 Soft Skills</a>
+    <a href="../14-leetcode/index.html">⚡ LeetCode</a>
+    <a href="../15-ai-engineering/index.html">🤖 AI Eng</a>
+    <a href="../16-token-optimization/index.html">🪙 Tokens</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / Patrones de Arquitectura</div>
+  <h1>🏛️ Patrones de Arquitectura</h1>
+  <p>Los patrones que los ingenieros senior usan para diseñar sistemas escalables y mantenibles.</p>
+</div>
+
+<main>
+
+  <!-- MONOLITO VS MICROSERVICIOS -->
+  <div class="section-title">Monolito vs Microservicios</div>
+  <p class="section-subtitle">La decisión arquitectónica más importante y más discutida en la industria.</p>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <span class="card-icon">🗿</span>
+      <h3>Monolito</h3>
+      <p>Todo el código en una sola unidad deployable. Un solo proceso, una sola base de datos.</p>
+      <br/>
+      <div class="diagram">  ┌─────────────────────┐
+  │      MONOLITO       │
+  │  ┌───────────────┐  │
+  │  │  Auth Module  │  │
+  │  │  Users Module │  │
+  │  │  Orders Mod.  │  │
+  │  │  Payment Mod. │  │
+  │  └───────────────┘  │
+  │   [Single DB]       │
+  └─────────────────────┘</div>
+      <p style="margin-top:1rem; color: var(--accent2)">✅ Simple de desarrollar y debuggear<br/>✅ Sin latencia de red entre módulos<br/>✅ Transacciones simples</p>
+      <p style="color: var(--accent3)">❌ Escala completa aunque solo un módulo necesita escalar<br/>❌ Deploy lento (todo o nada)<br/>❌ Un bug puede tirar todo</p>
+    </div>
+    <div class="card">
+      <span class="card-icon">🧩</span>
+      <h3>Microservicios</h3>
+      <p>Cada dominio de negocio es un servicio independiente con su propia base de datos.</p>
+      <br/>
+      <div class="diagram">  [Auth Svc]  [User Svc]
+  [DB]         [DB]
+      \          /
+    [API Gateway]
+      /          \
+  [Order Svc] [Pay Svc]
+  [DB]         [DB]</div>
+      <p style="margin-top:1rem; color: var(--accent2)">✅ Escala independiente por servicio<br/>✅ Deploy independiente<br/>✅ Teams autónomos por servicio</p>
+      <p style="color: var(--accent3)">❌ Complejidad operacional alta<br/>❌ Latencia de red entre servicios<br/>❌ Transacciones distribuidas</p>
+    </div>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <p><strong>Martin Fowler dice:</strong> "Don't start with microservices. Start monolithic, then break into services when you have scaling or team problems." Amazon, Netflix, Uber empezaron como monolitos.</p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- EVENT-DRIVEN -->
+  <div class="section-title">Event-Driven Architecture</div>
+  <p class="section-subtitle">Los servicios se comunican mediante eventos en lugar de llamadas directas.</p>
+
+  <div class="diagram">  SÍNCRONO (Acoplado):
+  Order Service ──HTTP→ Payment Service ──HTTP→ Inventory Service
+  (espera respuesta de cada uno, todos deben estar UP)
+
+  EVENT-DRIVEN (Desacoplado):
+  Order Service → Event: "OrderPlaced" → Message Bus
+                                              │
+                              ┌───────────────┼───────────────┐
+                              ↓               ↓               ↓
+                      Payment Svc    Inventory Svc    Email Svc
+                      (procesa       (reserva          (envía
+                       pago)          stock)            email)</div>
+
+  <div class="grid grid-3">
+    <div class="concept-block">
+      <h4>📢 Event Notification</h4>
+      <p>Publicar que algo ocurrió. El evento lleva poca data. Los consumidores consultan el source si necesitan más info. Muy desacoplado.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>📦 Event-Carried State Transfer</h4>
+      <p>El evento lleva toda la data necesaria. El consumidor no necesita consultar al emisor. Más data en el evento, menos requests.</p>
+    </div>
+    <div class="concept-block purple">
+      <h4>📜 Event Sourcing</h4>
+      <p>El estado del sistema ES la secuencia de eventos. No guardas el estado actual, guardas todos los eventos. Puedes reconstruir cualquier estado pasado.</p>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- CQRS -->
+  <div class="section-title">CQRS — Command Query Responsibility Segregation</div>
+  <p class="section-subtitle">Separar el modelo de escritura (Commands) del modelo de lectura (Queries).</p>
+
+  <div class="diagram">  SIN CQRS: Un solo modelo para todo
+  ┌─────────────────────────────────┐
+  │  Order Model (Read + Write)     │
+  │  → Difícil de optimizar ambos   │
+  └─────────────────────────────────┘
+
+  CON CQRS: Modelos separados
+  ┌──────────────────┐    ┌──────────────────────────┐
+  │  COMMAND SIDE    │    │  QUERY SIDE              │
+  │  (Write)         │    │  (Read)                  │
+  │                  │    │                          │
+  │  PlaceOrder()    │─→──│  GetOrderDetails()       │
+  │  CancelOrder()   │    │  GetUserOrders()         │
+  │  UpdateOrder()   │    │  SearchOrders()          │
+  │                  │    │                          │
+  │  [Write DB]      │    │  [Read DB - Optimizada]  │
+  │  Normalized      │    │  Denormalized / Cache    │
+  └──────────────────┘    └──────────────────────────┘
+          │                           ↑
+          └──── Event/Sync ───────────┘</div>
+
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>✅ Cuándo usar CQRS</h4>
+      <p>Cuando reads y writes tienen requerimientos muy distintos. Sistemas con muchos más reads que writes. Cuando necesitas múltiples "vistas" del mismo dato.</p>
+    </div>
+    <div class="concept-block red">
+      <h4>❌ Cuándo NO usar CQRS</h4>
+      <p>CRUD simples. Sistemas pequeños. Cuando la complejidad añadida no se justifica. CQRS aumenta la complejidad significativamente.</p>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- SAGA PATTERN -->
+  <div class="section-title">Saga Pattern</div>
+  <p class="section-subtitle">Gestionar transacciones distribuidas en microservicios sin necesidad de 2PC.</p>
+
+  <div class="callout">
+    <div class="callout-icon">💡</div>
+    <p><strong>El problema:</strong> En microservicios, cada servicio tiene su propia DB. No puedes hacer un atomic transaction entre Order DB, Payment DB e Inventory DB. Saga resuelve esto con compensaciones.</p>
+  </div>
+
+  <div class="diagram">  SAGA COREOGRAPHY (Eventos):
+  1. Order Svc → Event: OrderCreated
+  2. Payment Svc → escucha → cobra pago → Event: PaymentCompleted
+  3. Inventory Svc → escucha → reserva stock → Event: StockReserved
+  4. Order Svc → escucha → marca pedido como confirmado
+
+  Si el pago FALLA:
+  Payment Svc → Event: PaymentFailed
+  Order Svc → escucha → cancela orden (compensación)
+
+  SAGA ORCHESTRATION (Orquestador central):
+  ┌─────────────────────┐
+  │  Order Orchestrator │
+  └──────────┬──────────┘
+  1. → Payment Svc: "Cobra pago"
+  2. ← PaymentSvc: OK
+  3. → Inventory Svc: "Reserva stock"
+  4. ← Inventory Svc: FAIL
+  5. → Payment Svc: "Reversa pago" (compensación)</div>
+
+  <hr class="section-divider" />
+
+  <!-- CIRCUIT BREAKER -->
+  <div class="section-title">Circuit Breaker</div>
+  <p class="section-subtitle">Patrón para prevenir fallos en cascada cuando un servicio dependiente está caído.</p>
+
+  <div class="diagram">  STATES del Circuit Breaker:
+
+  CLOSED (normal) → OPEN (falla detectada) → HALF-OPEN (probando)
+      ↑                                              │
+      └────────────── Si funciona, vuelve a CLOSED ──┘
+
+  ┌─────────────────────────────────────────────────────┐
+  │  CLOSED: Pasa todas las requests                    │
+  │  Si tasa de error > umbral → pasa a OPEN            │
+  │                                                     │
+  │  OPEN: Rechaza todas las requests inmediatamente    │
+  │  (fail fast, sin esperar timeout)                   │
+  │  Después de X segundos → pasa a HALF-OPEN           │
+  │                                                     │
+  │  HALF-OPEN: Deja pasar algunas requests para probar │
+  │  Si funcionan → CLOSED  │  Si fallan → OPEN         │
+  └─────────────────────────────────────────────────────┘</div>
+
+  <pre><code><span class="cm"># Circuit Breaker con tenacity (Python)</span>
+<span class="kw">from</span> tenacity <span class="kw">import</span> retry, stop_after_attempt, wait_exponential
+
+<span class="kw">@retry</span>(
+    stop=stop_after_attempt(<span class="num">3</span>),
+    wait=wait_exponential(multiplier=<span class="num">1</span>, min=<span class="num">4</span>, max=<span class="num">10</span>)
+)
+<span class="kw">def</span> <span class="fn">call_payment_service</span>(order_id):
+    response = requests.post(<span class="str">"/payments"</span>, json={<span class="str">"order_id"</span>: order_id})
+    response.raise_for_status()
+    <span class="kw">return</span> response.json()</code></pre>
+
+  <hr class="section-divider" />
+
+  <!-- BFF PATTERN -->
+  <div class="section-title">BFF — Backend for Frontend</div>
+  <p class="section-subtitle">Un backend especializado por tipo de cliente (mobile, web, TV).</p>
+
+  <div class="diagram">  SIN BFF:
+  Mobile App ──────┐
+  Web App ─────────┼──→ [Generic API] → Services
+  Smart TV ────────┘
+  (mismo API para todos, difícil de optimizar)
+
+  CON BFF:
+  Mobile App ──→ [Mobile BFF] ─────┐
+  Web App ────→ [Web BFF] ──────────┼──→ [Services]
+  Smart TV ───→ [TV BFF] ───────────┘
+  (cada BFF agrega, filtra y adapta la data para su cliente)</div>
+
+  <div class="concept-block">
+    <h4>¿Por qué usar BFF?</h4>
+    <p>Mobile necesita menos data (menos bandwidth). Web puede pedir más. TV tiene UX diferente. Cada BFF puede estar optimizado para su cliente específico. Netflix, SoundCloud y Spotify usan este patrón.</p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- OUTBOX PATTERN -->
+  <div class="section-title">Outbox Pattern</div>
+  <p class="section-subtitle">Resolver el dual-write problem entre tu base de datos y un message broker. Patrón crítico para senior.</p>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <p><strong>El problema:</strong> Necesitas guardar en DB Y publicar un evento en Kafka atómicamente. Si guardas en DB y Kafka se cae antes del publish, el evento se pierde. Si publicas primero y la DB falla, tienes un evento sin el dato. ¿Cómo garantizas que ambas cosas pasan o ninguna?</p>
+  </div>
+
+  <div class="diagram">  DUAL-WRITE PROBLEM (lo que NO hacer):
+
+  Order Service:
+  1. INSERT INTO orders (id, status) VALUES (123, 'created')
+  2. kafka.publish("order.created", {order_id: 123})  ← puede fallar aquí
+
+  Si kafka falla después del INSERT → inconsistencia irreparable
+
+  ─────────────────────────────────────────────────────────
+
+  OUTBOX PATTERN (la solución):
+
+  MISMA transacción de DB:
+  BEGIN;
+    INSERT INTO orders (id, status) VALUES (123, 'created');
+    INSERT INTO outbox (event_type, payload, created_at)
+      VALUES ('order.created', '{"order_id": 123}', NOW());
+  COMMIT;  ← atómico: ambos o ninguno
+
+  Outbox Relay Service (proceso separado):
+  LOOP:
+    rows = SELECT * FROM outbox WHERE processed = false ORDER BY created_at
+    FOR row IN rows:
+      kafka.publish(row.event_type, row.payload)
+      UPDATE outbox SET processed = true WHERE id = row.id
+
+  ┌──────────────┐    ┌──────────────┐    ┌─────────────────┐
+  │  Order Svc   │    │  Outbox DB   │    │  Outbox Relay   │
+  │              │    │  (misma DB   │    │  (polls outbox  │
+  │  INSERT order│───→│   del svc)   │───→│  y publica en   │
+  │  INSERT event│    │              │    │  Kafka)         │
+  └──────────────┘    └──────────────┘    └────────┬────────┘
+                                                    │
+                                                    ↓
+                                             ┌────────────┐
+                                             │   Kafka    │
+                                             └────────────┘
+  ✅ Atomicidad garantizada (transacción DB)
+  ✅ At-least-once delivery (el relay reintenta si Kafka falla)
+  ✅ Orden garantizado por created_at
+  ⚠️  At-least-once: los consumidores deben ser idempotentes</div>
+
+  <div class="concept-block green">
+    <h4>Implementaciones del Outbox Relay</h4>
+    <p>
+      <strong>Polling:</strong> El relay consulta la tabla outbox cada N segundos. Simple pero agrega carga a la DB.<br/>
+      <strong>Debezium (CDC — Change Data Capture):</strong> Lee el WAL (Write-Ahead Log) de PostgreSQL/MySQL directamente. Más eficiente, sin polling. Detecta cambios a nivel de replication log. La solución más usada en producción a escala.
+    </p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- STRANGLER FIG -->
+  <div class="section-title">Strangler Fig Pattern</div>
+  <p class="section-subtitle">Migrar incrementalmente de un monolito a microservicios sin downtime. Cómo lo hicieron Amazon y Netflix.</p>
+
+  <div class="concept-block">
+    <h4>El nombre</h4>
+    <p>El higo estrangulador es una planta que crece alrededor de un árbol huésped. Con el tiempo, el árbol original muere y el higo lo reemplaza. El patrón es igual: los microservicios crecen alrededor del monolito hasta reemplazarlo.</p>
+  </div>
+
+  <div class="diagram">  STRANGLER FIG — Migración paso a paso:
+
+  FASE 1 — Estado inicial:
+  Client → [Monolito] (todo en un solo sistema)
+
+  FASE 2 — Agregar un Facade/Proxy delante:
+  Client → [API Gateway / Proxy] → [Monolito] (sin cambios aún)
+
+  FASE 3 — Extraer el primer servicio:
+  Client → [API Gateway] → /users → [User Microservice] (nuevo)
+                        → /orders → [Monolito]
+                        → /products → [Monolito]
+
+  FASE 4 — Extraer más servicios gradualmente:
+  Client → [API Gateway] → /users → [User Microservice]
+                        → /orders → [Order Microservice]
+                        → /products → [Monolito] (reducido)
+
+  FASE 5 — El monolito desaparece:
+  Client → [API Gateway] → /users → [User Svc]
+                        → /orders → [Order Svc]
+                        → /products → [Product Svc]
+                        → [Monolito eliminado]
+
+  Cada paso es deployable independientemente.
+  Si algo falla, el Proxy puede hacer rollback redirigiendo al monolito.</div>
+
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>✅ Por qué funciona</h4>
+      <p>No hay un "big bang rewrite" (que históricamente falla). La migración es incremental. Cada servicio extraído puede validarse en producción antes de extraer el siguiente. El negocio sigue funcionando durante todo el proceso.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>Casos reales</h4>
+      <p>Amazon tardó años en migrar su monolito. Netflix también fue incremental. Airbnb usó este patrón para separar el monolito Ruby on Rails. La clave: el API Gateway/Proxy es el punto de control que permite la transición gradual.</p>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- SIDECAR PATTERN -->
+  <div class="section-title">Sidecar Pattern</div>
+  <p class="section-subtitle">Un proceso auxiliar que vive junto al servicio principal para agregar funcionalidad cross-cutting.</p>
+
+  <div class="diagram">  SIDECAR en Kubernetes:
+
+  ┌─────────────────────────────────────────┐
+  │  Pod                                    │
+  │  ┌─────────────────┐  ┌──────────────┐  │
+  │  │  Tu App         │  │  Sidecar     │  │
+  │  │  (main container│  │  (Envoy Proxy│  │
+  │  │   port 8080)    │  │   port 15001)│  │
+  │  │                 │  │              │  │
+  │  │  No sabe nada   │  │  mTLS        │  │
+  │  │  de mTLS,       │  │  Tracing     │  │
+  │  │  tracing, ni    │  │  Metrics     │  │
+  │  │  load balancing │  │  Retries     │  │
+  │  └─────────────────┘  └──────────────┘  │
+  │         Comparten red y storage          │
+  └─────────────────────────────────────────┘
+
+  Todo el tráfico pasa por el Sidecar.
+  Tu app no necesita código extra para estas features.
+
+  Ejemplos de Sidecars:
+  · Envoy Proxy → usado por Istio/Linkerd para service mesh
+  · Fluentd → recolección de logs sin tocar la app
+  · Vault Agent → inyección de secrets sin código de Vault en la app</div>
+
+  <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+    <a class="card" href="../06-case-studies/index.html" style="flex: 1; min-width: 200px;">
+      <span class="card-icon">🔬</span>
+      <h3>Ver en acción: Casos Reales →</h3>
+      <p>Estos patrones aplicados en sistemas reales.</p>
+    </a>
+    <a class="card" href="../08-interview-prep/index.html" style="flex: 1; min-width: 200px;">
+      <span class="card-icon">🎯</span>
+      <h3>Prep Entrevistas →</h3>
+      <p>Cómo presentar estos patrones en entrevistas.</p>
+    </a>
+  </div>
+
+</main>
+
+<footer>
+  <p>System Design Guide · <a href="../index.html">← Volver al inicio</a></p>
+</footer>
+
+</body>
+</html>

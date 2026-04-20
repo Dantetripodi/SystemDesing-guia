@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Search & Full-Text Search — System Design Guide</title>
+  <link rel="stylesheet" href="../styles/main.css" />
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="../index.html">⚡ System<span>Design</span></a>
+  <div class="nav-links">
+    <a href="../01-fundamentals/index.html">Fundamentos</a>
+    <a href="../02-components/index.html">Componentes</a>
+    <a href="../03-patterns/index.html">Patrones</a>
+    <a href="../04-databases/index.html">Bases de Datos</a>
+    <a href="../05-apis/index.html">APIs</a>
+    <a href="../06-case-studies/index.html">Casos Reales</a>
+    <a href="../07-infrastructure/index.html">Infraestructura</a>
+    <a href="../08-interview-prep/index.html">Entrevistas</a>
+    <a href="../09-resources/index.html">Recursos</a>
+    <a href="../10-advanced-topics/index.html">Avanzado</a>
+    <a href="../11-security/index.html">🔐 Seguridad</a>
+    <a href="../12-search/index.html" class="active">🔍 Search</a>
+    <a href="../13-soft-skills/index.html">🎭 Soft Skills</a>
+    <a href="../14-leetcode/index.html">⚡ LeetCode</a>
+    <a href="../15-ai-engineering/index.html">🤖 AI Eng</a>
+    <a href="../16-token-optimization/index.html">🪙 Tokens</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / Search &amp; Full-Text Search</div>
+  <h1>🔍 Search &amp; Full-Text Search</h1>
+  <p>Inverted index, Elasticsearch, type-ahead, vector search y cómo diseñar sistemas de búsqueda a escala. Preguntas clásicas de Google, LinkedIn y Airbnb.</p>
+</div>
+
+<main>
+
+  <!-- POR QUÉ NO SQL LIKE -->
+  <div class="section-title">¿Por qué no alcanza con SQL LIKE?</div>
+  <p class="section-subtitle">El punto de partida que todo interviewer espera que expliques.</p>
+
+  <div class="diagram">  SQL LIKE — Cómo funciona:
+
+  SELECT * FROM products WHERE description LIKE '%wireless headphones%';
+
+  El motor recorre TODA la tabla fila por fila:
+  Row 1: "Bluetooth wireless headphones noise cancelling" → ✅ match
+  Row 2: "USB-C charging cable"                          → ❌ no match
+  Row 3: "Over-ear headphones with wireless Bluetooth"  → ✅ match
+  ...10 million rows después...
+
+  Complejidad: O(N × M) donde N = filas, M = longitud del texto
+
+  PROBLEMAS:
+  ❌ Sin índice posible (el % al inicio deshabilita índices)
+  ❌ O(N) — Full table scan en CADA query
+  ❌ No entiende relevancia ("headphones wireless" ≠ "wireless headphones" para LIKE)
+  ❌ Sin stemming ("run" no matchea "running")
+  ❌ Sin sinónimos ("car" no matchea "automobile")
+  ❌ Sin typo tolerance ("headphnes" no matchea nada)
+
+  ─────────────────────────────────────────────────────
+
+  FULL-TEXT SEARCH ENGINE (Elasticsearch):
+
+  Misma query → O(log N) usando un Inverted Index pre-construido
+  + Relevance scoring
+  + Stemming, synonyms, fuzzy matching
+  + Sub-segundo incluso con billones de documentos</div>
+
+  <hr class="section-divider" />
+
+  <!-- INVERTED INDEX -->
+  <div class="section-title">Inverted Index — El Corazón del Search</div>
+  <p class="section-subtitle">La estructura de datos que hace posible la búsqueda de texto a escala.</p>
+
+  <div class="concept-block">
+    <h4>¿Qué es un Inverted Index?</h4>
+    <p>Es lo opuesto a un índice de libro. En vez de "documento → palabras", construís "palabra → documentos donde aparece". Similar al índice de un libro de texto, pero para millones de documentos.</p>
+  </div>
+
+  <div class="diagram">  DOCUMENTOS ORIGINALES:
+  Doc1: "Elasticsearch is a distributed search engine"
+  Doc2: "Search engines use inverted index structures"
+  Doc3: "Distributed systems need consistent hashing"
+
+  ─────────────────────────────────────────────────────
+
+  PROCESO DE INDEXACIÓN:
+  1. Tokenización: "Elasticsearch is a distributed..." → ["elasticsearch", "is", "a", "distributed", ...]
+  2. Normalización: lowercase → "elasticsearch"
+  3. Stopwords removal: quitar "is", "a", "the" → ["elasticsearch", "distributed", "search", "engine"]
+  4. Stemming: "engines" → "engin", "searching" → "search"
+
+  ─────────────────────────────────────────────────────
+
+  INVERTED INDEX RESULTANTE:
+  ┌─────────────────┬──────────────────────────────────────┐
+  │ Term            │ Postings List (docId: positions)     │
+  ├─────────────────┼──────────────────────────────────────┤
+  │ "elasticsearch" │ [Doc1: [0]]                          │
+  │ "distributed"   │ [Doc1: [3], Doc3: [0]]               │
+  │ "search"        │ [Doc1: [4], Doc2: [0]]               │
+  │ "engine"        │ [Doc1: [5], Doc2: [2]]               │
+  │ "inverted"      │ [Doc2: [3]]                          │
+  │ "index"         │ [Doc2: [4]]                          │
+  │ "consistent"    │ [Doc3: [3]]                          │
+  │ "hashing"       │ [Doc3: [4]]                          │
+  └─────────────────┴──────────────────────────────────────┘
+
+  QUERY: "distributed search"
+  1. Buscar "distributed" → [Doc1, Doc3]
+  2. Buscar "search" → [Doc1, Doc2]
+  3. Intersección → [Doc1]
+  4. Resultado: Doc1 en O(log N)  ✅</div>
+
+  <hr class="section-divider" />
+
+  <!-- TF-IDF Y BM25 -->
+  <div class="section-title">Relevance Scoring — TF-IDF y BM25</div>
+  <p class="section-subtitle">Cómo el search engine decide qué resultado es más relevante. Pregunta frecuente en Google.</p>
+
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>TF-IDF (Term Frequency - Inverse Document Frequency)</h4>
+      <p>
+        <strong>TF:</strong> Qué tan frecuente es el término en este documento. "elasticsearch" aparece 5 veces → mayor relevancia.<br/>
+        <strong>IDF:</strong> Qué tan raro es el término en todos los documentos. "the" aparece en todos → baja relevancia. "elasticsearch" aparece en pocos → alta relevancia.<br/>
+        <strong>Score = TF × IDF</strong> — Palabras frecuentes en el doc pero raras globalmente = más relevantes.
+      </p>
+    </div>
+    <div class="concept-block green">
+      <h4>BM25 (Best Match 25) — El estándar actual</h4>
+      <p>
+        Mejora de TF-IDF usada por Elasticsearch, Lucene, Solr desde 2015.<br/>
+        Agrega: <strong>document length normalization</strong> (documentos más cortos que mencionan el término son más relevantes que uno largo).<br/>
+        <strong>Term saturation</strong> (duplicar frecuencia de un término no duplica el score — evita spam).<br/>
+        Parámetros configurables: k1 (saturation), b (length normalization).
+      </p>
+    </div>
+  </div>
+
+  <div class="diagram">  BM25 Score (simplificado):
+
+  score(D, Q) = Σ IDF(qi) × (TF(qi,D) × (k1 + 1)) / (TF(qi,D) + k1 × (1 - b + b × |D|/avgdl))
+
+  Donde:
+  qi = cada término de la query Q
+  D  = documento
+  k1 = saturación del TF (típico: 1.2)
+  b  = normalización de longitud (típico: 0.75)
+  |D| = longitud del documento
+  avgdl = longitud promedio de documentos
+
+  EJEMPLO PRÁCTICO:
+  Query: "distributed systems"
+  Doc1: "Distributed systems are complex" (4 words) → score alto (doc corto)
+  Doc2: "... distributed ... 500 palabras ... systems ..." → score menor (doc largo)
+  → BM25 prefiere Doc1 aunque ambos contengan los términos</div>
+
+  <hr class="section-divider" />
+
+  <!-- ELASTICSEARCH ARQUITECTURA -->
+  <div class="section-title">Elasticsearch — Arquitectura a Escala</div>
+  <p class="section-subtitle">Cómo funciona internamente el motor de búsqueda más usado en producción.</p>
+
+  <div class="diagram">  CLUSTER DE ELASTICSEARCH:
+
+  ┌─────────────────────────────────────────────────────────┐
+  │                    ES Cluster                           │
+  │                                                         │
+  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+  │  │   Node 1     │  │   Node 2     │  │   Node 3     │  │
+  │  │  (Master)    │  │  (Data)      │  │  (Data)      │  │
+  │  │              │  │              │  │              │  │
+  │  │  Index "products" (3 shards):  │              │  │
+  │  │  ┌─────────┐ │  ┌─────────┐   │  ┌─────────┐   │  │
+  │  │  │ Shard 0 │ │  │ Shard 1 │   │  │ Shard 2 │   │  │
+  │  │  │(primary)│ │  │(primary)│   │  │(primary)│   │  │
+  │  │  └─────────┘ │  └─────────┘   │  └─────────┘   │  │
+  │  │  ┌─────────┐ │                │  ┌─────────┐   │  │
+  │  │  │Replica 1│ │                │  │Replica 0│   │  │
+  │  │  │(de S1)  │ │                │  │(de S0)  │   │  │
+  │  │  └─────────┘ │                │  └─────────┘   │  │
+  │  └──────────────┘  └──────────────┘  └──────────────┘  │
+  └─────────────────────────────────────────────────────────┘
+
+  Un INDEX = colección de documentos (como una tabla en SQL)
+  Un SHARD = instancia de Lucene (maneja el inverted index)
+  REPLICA = copia del shard para alta disponibilidad y más read throughput
+
+  Regla: Primary shards ≠ replica del mismo shard en el mismo nodo
+  → Si el nodo muere, la replica en otro nodo toma el control</div>
+
+  <div class="grid grid-3">
+    <div class="concept-block">
+      <h4>Write Path</h4>
+      <p>Client → coordinating node → primary shard → réplicas en paralelo → ACK al client. El primary shard ejecuta la indexación y propaga a réplicas.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>Read Path</h4>
+      <p>Client → coordinating node → distribuye a todos los shards (primary o replica) → merge y rank de resultados → top N devueltos. Round-robin entre primaries y réplicas para balancear carga.</p>
+    </div>
+    <div class="concept-block purple">
+      <h4>Near Real-Time (NRT)</h4>
+      <p>Elasticsearch no es estrictamente real-time. Los documentos indexados son visibles dentro de ~1 segundo (el "refresh interval"). Configurable: refresh=true en el request para visibilidad inmediata (más caro).</p>
+    </div>
+  </div>
+
+  <div class="concept-block orange">
+    <h4>Cuándo NO usar Elasticsearch</h4>
+    <p>
+      No es una base de datos principal — no tiene ACID, puede perder datos ante fallas no manejadas.<br/>
+      No es bueno para updates frecuentes — los documentos son inmutables internamente (un update = delete + reindex).<br/>
+      No reemplaza tu base de datos relacional — úsalo como una proyección para búsqueda, sincronizada desde tu DB primaria.
+    </p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- TYPE-AHEAD / AUTOCOMPLETE -->
+  <div class="section-title">Case Study: Diseñar Type-Ahead / Autocomplete</div>
+  <p class="section-subtitle">La pregunta más frecuente de search en entrevistas de Google y Amazon. Diseñá el autocomplete de Google Search.</p>
+
+  <div class="concept-block">
+    <h4>Requisitos</h4>
+    <p>
+      <strong>Funcionales:</strong> A medida que el usuario tipea, mostrar 5 sugerencias de búsqueda ordenadas por popularidad. Latencia &lt; 100ms desde que el usuario tipea hasta que ve sugerencias.<br/>
+      <strong>Escala:</strong> 10M DAU. Cada usuario tipea ~10 caracteres por búsqueda. QPS = 10M × 10 / 86400 ≈ 1,200 QPS. Peak: ~5,000 QPS.
+    </p>
+  </div>
+
+  <div class="diagram">  TRIE (Prefix Tree) — La estructura de datos core:
+
+  Prefijo "ca" → sugerencias: "cat", "car", "cake", "camera"
+
+                    root
+                   /    \
+                 c        ...
+                 |
+                 a         ← después de "ca"
+               / | \
+              t  r  k
+              |  |  |
+           [cat] [car] e
+                       |
+                      [cake]
+
+  En cada nodo guardamos:
+  - Los top 5 términos más populares que empiezan con ese prefijo
+  - Frecuencia de búsqueda de cada término
+
+  Query "car" → navegar c→a→r → devolver top 5 del nodo "r"
+  Complejidad: O(longitud del prefijo) — casi O(1)</div>
+
+  <div class="diagram">  ARQUITECTURA DEL SISTEMA:
+
+  ─── DATA COLLECTION SERVICE (offline) ───────────────────
+
+  Search Logs → Analytics Pipeline (Kafka) → Frequency Aggregation
+  (Spark batch job, cada hora o cada día)
+  → Actualizar frecuencias del Trie
+
+  ─── TRIE BUILD SERVICE ───────────────────────────────────
+
+  Workers que leen las frecuencias agregadas
+  y reconstruyen el Trie (inmutable, snapshot)
+  → Guardar el Trie en S3/object storage como snapshot
+  → Versioning (poder rollback si hay bug)
+
+  ─── SERVING LAYER ────────────────────────────────────────
+
+  Client
+    │
+    ▼ (cada keystroke con debounce ~100ms)
+  CDN / Edge cache  ←── cachea sugerencias populares
+    │ (cache miss)
+    ▼
+  API Gateway → Load Balancer
+    │
+    ▼
+  Trie Servers (el Trie cargado en memoria RAM)
+  - Cada servidor tiene el Trie completo en RAM
+  - Stateless — fácil de escalar horizontalmente
+  - Latencia: sub-milisegundo (RAM lookup)
+    │
+    ▼
+  Top 5 sugerencias → Client
+
+  ─────────────────────────────────────────────────────────
+
+  OPTIMIZACIONES CLAVE:
+  1. Debounce en el cliente: esperar 100ms antes de hacer la request
+  2. CDN cache: "sear" → siempre devuelve "search", "searches", etc.
+  3. Prefijo compartido por millones → cache hit ratio muy alto (>90%)
+  4. Solo actualizar el Trie offline (no en tiempo real) para simplificar</div>
+
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>Trie en RAM vs Redis Sorted Sets</h4>
+      <p><strong>Trie en RAM:</strong> Sub-ms latencia. Toda la lógica en el servidor. Difícil de actualizar en caliente.<br/><strong>Redis Sorted Sets:</strong> Más simple de implementar. ZRANGEBYLEX para prefijos. Fácil de actualizar. Latencia ~1-2ms. Usar para MVPs o cuando la frecuencia de updates es alta.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>Personalización de Sugerencias</h4>
+      <p>Top sugerencias globales + boost para búsquedas recientes del usuario. Guardar historial en cookie o perfil del usuario. Mezclar: 3 globales + 2 personalizadas. Problema: privacidad — historial de búsqueda es PII sensible.</p>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- GEO SEARCH -->
+  <div class="section-title">Geo Search — Búsqueda por Proximidad</div>
+  <p class="section-subtitle">Diseñar "encuentra restaurantes cerca de mí". Pregunta clásica de Uber, Yelp, Google Maps.</p>
+
+  <div class="diagram">  EL PROBLEMA:
+  Tienes 50M de negocios con (lat, lng).
+  Query: "dame todos los negocios en radio de 5km de (40.7128, -74.0060)"
+
+  NAIVE — SQL:
+  SELECT * FROM businesses
+  WHERE distance(lat, lng, 40.7128, -74.0060) < 5000;
+  → Full table scan O(N) — imposible a escala
+
+  ─────────────────────────────────────────────────────
+
+  SOLUCIÓN 1: GEOHASHING
+
+  Divide el mundo en un grid jerárquico usando base32.
+  Cada geohash es un string: "dr5ru" (más largo = más preciso)
+
+  Longitud 1: ~5000km × 5000km
+  Longitud 4: ~40km × 20km
+  Longitud 6: ~1.2km × 0.6km  ← útil para búsqueda de 5km
+  Longitud 8: ~38m × 19m
+
+  Cómo funciona:
+  1. Al indexar: calcular geohash del negocio, guardar en Redis/DB
+  2. Al buscar: calcular geohash de la ubicación del usuario
+  3. Buscar negocios con mismo prefijo de geohash
+  4. También buscar en las 8 celdas vecinas (para el edge case del border)
+
+  Implementación con Redis:
+  GEOADD businesses lng lat "restaurante_1"
+  GEORADIUS businesses -74.0060 40.7128 5 km ASC LIMIT 50
+
+  ─────────────────────────────────────────────────────
+
+  SOLUCIÓN 2: QUADTREE
+
+  Divide el espacio en 4 cuadrantes recursivamente.
+  Cuando un cuadrante tiene más de N puntos (ej: 100), se divide.
+
+  [Mundo]
+  ┌──────────┬──────────┐
+  │ NW       │ NE       │
+  │  ┌──┬──┐ │          │
+  │  │NW│NE│ │          │
+  │  ├──┼──┤ │          │
+  │  │SW│SE│ │          │
+  │  └──┴──┘ │          │
+  ├──────────┼──────────┤
+  │ SW       │ SE       │
+  │          │          │
+  └──────────┴──────────┘
+
+  Áreas densas (NYC) → más subdivisiones
+  Áreas vacías (océano) → nodo hoja
+
+  ✅ Adapta la granularidad a la densidad de datos
+  ✅ Consultas de rango eficientes
+  ❌ Más complejo de implementar que geohashing</div>
+
+  <div class="concept-block">
+    <h4>¿Cuándo usar cada uno?</h4>
+    <p>
+      <strong>Geohashing:</strong> Más simple. Redis lo soporta nativo. Suficiente para la mayoría de los casos (Uber Eats, Yelp clone, Airbnb).<br/>
+      <strong>Quadtree:</strong> Mejor cuando la densidad de puntos varía mucho. Google Maps usa variantes de esto internamente.<br/>
+      <strong>PostGIS + PostgreSQL:</strong> Si ya usás Postgres, extensión PostGIS da funciones geoespaciales potentes sin complejidad adicional.
+    </p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- VECTOR SEARCH -->
+  <div class="section-title">Vector Search &amp; Semantic Search</div>
+  <p class="section-subtitle">El futuro del search — ya es el presente en sistemas de producción. Senior engineers necesitan entender esto.</p>
+
+  <div class="concept-block">
+    <h4>El problema del keyword search</h4>
+    <p>
+      Query: "affordable laptop for students"<br/>
+      Keyword search no encuentra: "budget notebook for college" — misma intención, palabras diferentes.<br/>
+      Vector search entiende <strong>semántica</strong>, no solo keywords.
+    </p>
+  </div>
+
+  <div class="diagram">  CÓMO FUNCIONA EL VECTOR SEARCH:
+
+  1. EMBEDDING (Indexación):
+  Texto: "laptop for students"
+  → Modelo de embedding (OpenAI, Sentence-BERT, etc.)
+  → Vector de alta dimensión: [0.23, -0.71, 0.89, 0.12, ...]
+                                (típicamente 768 o 1536 dimensiones)
+
+  2. ALMACENAMIENTO:
+  Cada documento se representa como un vector en un espacio n-dimensional.
+  Documentos con significado similar → vectores cercanos en ese espacio.
+
+  3. BÚSQUEDA (Aproximación):
+  Query: "budget notebook for college"
+  → Mismo modelo de embedding → vector_query = [0.25, -0.69, 0.91, 0.10, ...]
+
+  Buscar los K vectores más cercanos a vector_query.
+  Distancia: Cosine Similarity o Dot Product
+
+  cosine_similarity = (A · B) / (|A| × |B|)
+  → 1.0 = idénticos, 0 = sin relación, -1 = opuestos
+
+  RESULTADO: "laptop for students" y "budget notebook for college"
+  tienen alta similitud → aparecen en los mismos resultados ✅
+
+  ─────────────────────────────────────────────────────
+
+  ANN — APPROXIMATE NEAREST NEIGHBOR:
+  Buscar el vector más cercano exacto en millones de vectores es O(N).
+  ANN sacrifica un poco de precisión por velocidad.
+
+  HNSW (Hierarchical Navigable Small World):
+  - Estructura de grafo jerárquico
+  - Búsqueda en O(log N) en vez de O(N)
+  - Precisión: ~95-99% del exact search
+  - Usado por: Pinecone, Weaviate, pgvector, Milvus</div>
+
+  <div class="grid grid-3">
+    <div class="concept-block">
+      <h4>Pinecone</h4>
+      <p>Vector database as a service. Fully managed. Alta performance. Sin infraestructura. Ideal para MVPs y startups. Precio basado en pods.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>pgvector</h4>
+      <p>Extensión de PostgreSQL. Si ya usás Postgres, añadís vector search sin nueva infra. Suficiente para &lt;10M vectores. No requiere modelo de deployment separado.</p>
+    </div>
+    <div class="concept-block purple">
+      <h4>Weaviate / Milvus</h4>
+      <p>Open source vector databases. Self-hosted. Weaviate incluye módulos de embedding integrados. Milvus para escala masiva (&gt;1B vectores).</p>
+    </div>
+  </div>
+
+  <div class="concept-block orange">
+    <h4>Hybrid Search — La solución más robusta</h4>
+    <p>
+      Combinar keyword search (BM25) + vector search (semantic) para mejores resultados.<br/>
+      <strong>Reciprocal Rank Fusion (RRF):</strong> técnica para combinar los rankings de ambos sistemas.<br/>
+      Resultado final: documentos que son relevantes tanto en términos exactos como en semántica.<br/>
+      Elasticsearch 8.x y Weaviate lo soportan nativamente. Es el estado del arte en 2025.
+    </p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- PIPELINE DE INDEXACIÓN -->
+  <div class="section-title">Search Pipeline — Write Path y Read Path</div>
+  <p class="section-subtitle">Cómo diseñar el pipeline completo de indexación y búsqueda.</p>
+
+  <div class="diagram">  WRITE PATH (cómo los documentos llegan al índice):
+
+  Evento de negocio         Kafka Topic
+  (nuevo producto) ─────→  "product.created"
+                                 │
+                            ┌────▼────────┐
+                            │  Indexer    │
+                            │  Service    │
+                            │  (consumer) │
+                            └────┬────────┘
+                                 │ transforma el doc
+                                 │ (field mapping, analyzers)
+                                 │
+                            ┌────▼────────────────────┐
+                            │  Elasticsearch Cluster  │
+                            │  Primary shard indexa   │
+                            │  → propaga a replicas   │
+                            └─────────────────────────┘
+
+  Consideraciones:
+  ✅ Kafka desacopla el indexer — si ES está caído, los eventos se acumulan
+  ✅ Retry automático con dead letter queue
+  ✅ Idempotencia — si el mismo evento se procesa dos veces, no importa
+  ⚠️  Eventual consistency — hay un lag entre el evento y su visibilidad en search
+
+  ─────────────────────────────────────────────────────
+
+  READ PATH (cómo se procesa una búsqueda):
+
+  Client
+    │ "wireless headphones under $50"
+    ▼
+  Query Understanding Layer:
+  - Intent detection (¿es una query de compra? ¿informacional?)
+  - Entity extraction: product_type="headphones", max_price=50
+  - Spell correction: "headphnes" → "headphones"
+  - Query expansion: "wireless" → sinónimos, variantes
+    │
+    ▼
+  Elasticsearch Query DSL:
+  {
+    "query": {
+      "bool": {
+        "must": [{"multi_match": {"query": "wireless headphones", "fields": ["title^3", "description"]}}],
+        "filter": [{"range": {"price": {"lte": 50}}}]
+      }
+    }
+  }
+    │
+    ▼
+  Results de cada shard → merge → ranking final
+    │
+    ▼
+  Ranking Layer (post-processing):
+  - Personalization signals (historial del usuario)
+  - Business rules (boost productos patrocinados)
+  - A/B testing de ranking algorithms
+    │
+    ▼
+  Top 20 results → Client</div>
+
+  <hr class="section-divider" />
+
+  <!-- REINDEXACIÓN SIN DOWNTIME -->
+  <div class="section-title">Zero-Downtime Reindexing</div>
+  <p class="section-subtitle">Cómo actualizar el mapping o reindexar sin tirar el servicio.</p>
+
+  <div class="concept-block">
+    <h4>El Problema</h4>
+    <p>Querés cambiar el mapping de un campo (ej: de keyword a text para habilitar full-text search). En ES, no podés cambiar el mapping de un índice existente — hay que recrear el índice. Pero el servicio no puede bajar.</p>
+  </div>
+
+  <div class="diagram">  ALIAS-BASED ZERO-DOWNTIME REINDEXING:
+
+  Estado inicial:
+  Alias "products_alias" → apunta a "products_v1"
+  Tu aplicación siempre usa el alias, nunca el índice directamente.
+
+  Paso 1: Crear índice nuevo con el mapping correcto
+  PUT /products_v2  (con el nuevo mapping)
+
+  Paso 2: Reindexar los datos
+  POST /_reindex
+  { "source": {"index": "products_v1"}, "dest": {"index": "products_v2"} }
+  (esto puede tardar horas para millones de docs — es asíncrono)
+
+  Paso 3: Mientras reindexas, los writes nuevos van a products_v1
+  → Después del reindex, reindexar solo los docs nuevos (por timestamp)
+
+  Paso 4: Atomic alias swap
+  POST /_aliases
+  { "actions": [
+    { "remove": {"index": "products_v1", "alias": "products_alias"} },
+    { "add":    {"index": "products_v2", "alias": "products_alias"} }
+  ]}
+  → Todo el tráfico va a products_v2 instantáneamente
+
+  Paso 5: Eliminar products_v1 cuando ya no es necesario
+
+  ✅ Zero downtime
+  ✅ Rollback trivial (swap el alias de vuelta a v1)
+  ✅ El patrón alias + versioned index es best practice</div>
+
+  <hr class="section-divider" />
+
+  <!-- CASE STUDY: SEARCH SYSTEM COMPLETO -->
+  <div class="section-title">Case Study: Diseñar el Search de Twitter</div>
+  <p class="section-subtitle">Pregunta real de Meta/Twitter. Diseñar la búsqueda de tweets en tiempo real.</p>
+
+  <div class="concept-block">
+    <h4>Requisitos</h4>
+    <p>
+      <strong>Funcionales:</strong> Buscar tweets por palabras clave. Resultados ordenados por relevancia y tiempo. Filtros por fecha, usuario, idioma.<br/>
+      <strong>Escala:</strong> 500M tweets/día nuevos. 20B tweets en total. 100K búsquedas/segundo. Latencia &lt; 500ms P99.
+    </p>
+  </div>
+
+  <div class="concept-block green">
+    <h4>Estimaciones</h4>
+    <p>
+      Tweets/segundo: 500M / 86400 ≈ 5,800 writes/seg.<br/>
+      Average tweet size: 300 bytes (metadata) + 280 chars = ~600 bytes.<br/>
+      Storage/día: 5,800 × 600 bytes = ~3.5 GB/día de texto.<br/>
+      Index size: típicamente 3-5x el tamaño del texto original = ~15 GB/día de índice.
+    </p>
+  </div>
+
+  <div class="diagram">  ARQUITECTURA HIGH-LEVEL:
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │  INGEST PIPELINE                                            │
+  │                                                             │
+  │  Tweets → Kafka ("tweet.created") → Indexer Workers         │
+  │                                         │                   │
+  │  Procesamiento:                         │                   │
+  │  - Language detection                   │                   │
+  │  - Entity extraction (#hashtags,        │                   │
+  │    @mentions, URLs)                     │                   │
+  │  - Media type detection                 │                   │
+  │  - Spam/quality filtering               │                   │
+  └─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+  ┌─────────────────────────────────────────────────────────────┐
+  │  INDEX LAYER                                                │
+  │                                                             │
+  │  Elasticsearch Cluster:                                     │
+  │  - Index por día (time-based): tweets_2025_04_19           │
+  │  - Alias "tweets_recent" → últimos 7 días                  │
+  │  - Alias "tweets_all" → todo                               │
+  │  - Hot/Warm/Cold tiers:                                    │
+  │    Hot (SSD): últimas 24hs (alto traffic)                  │
+  │    Warm (HDD): últimos 30 días                             │
+  │    Cold (S3): más de 30 días (búsquedas raras)             │
+  └─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+  ┌─────────────────────────────────────────────────────────────┐
+  │  SEARCH SERVICE                                             │
+  │                                                             │
+  │  Query → NLP Processing → ES Query Builder                 │
+  │                                                             │
+  │  Ranking signals:                                           │
+  │  - BM25 relevance score (texto)                            │
+  │  - Recency boost (tweets más nuevos = más relevantes)      │
+  │  - Engagement score (RT, likes, respuestas)                │
+  │  - Author authority (seguidores del autor)                 │
+  │  - Personalization (follows del usuario)                   │
+  └─────────────────────────────────────────────────────────────┘
+
+  DECISIONES CLAVE:
+  ✅ Índices por día → fácil de expirar datos viejos (delete un índice)
+  ✅ Hot/Warm/Cold → reducir costos (tweets viejos no necesitan SSD)
+  ✅ Kafka → absorbe picos de tráfico (trending topics)
+  ✅ Async indexing → ~segundos de lag es aceptable para Twitter Search</div>
+
+  <hr class="section-divider" />
+
+  <!-- PREGUNTAS DE ENTREVISTA -->
+  <div class="section-title">Preguntas de Entrevista — Search</div>
+  <p class="section-subtitle">Las preguntas más frecuentes de search en entrevistas semi-senior y senior.</p>
+
+  <div class="concept-block">
+    <h4>"Diseñá el autocomplete de Google Search"</h4>
+    <p>
+      Respuesta esperada: Trie con top-K por nodo guardado. Offline training con frecuencias de búsqueda. CDN para cache de prefijos populares. Geo-aware (sugerencias diferentes por país). Personalización (historial del usuario). Debounce en el cliente. Considerar censura/moderación de sugerencias. Actualización del Trie sin downtime (blue-green deployment).
+    </p>
+  </div>
+
+  <div class="concept-block green">
+    <h4>"Diseñá la búsqueda de Airbnb"</h4>
+    <p>
+      Dual challenge: full-text search (keywords) + geo search (ubicación). Elasticsearch con geo_point fields. Filtros por precio, fechas de disponibilidad, amenities. Ranking: relevancia + precio + reviews + distancia al centro. Disponibilidad es un join complejo (necesitás calendar de reservas). Solución: pre-computar disponibilidad en el índice de Elasticsearch con actualizaciones en tiempo real via Kafka.
+    </p>
+  </div>
+
+  <div class="concept-block purple">
+    <h4>"Diseñá un sistema de recomendación de productos"</h4>
+    <p>
+      Collaborative filtering (usuarios similares compraron X). Content-based filtering (embedding del producto similar al historial). Two-tower model: user embedding + item embedding → dot product = score. Offline training en Spark → exportar embeddings a vector DB (Pinecone/Redis). Online serving: dado el user embedding, ANN search para los K ítems más similares. Candidate generation → ranking → business rules → resultado.
+    </p>
+  </div>
+
+  <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+    <a class="card" href="../11-security/index.html" style="flex: 1; min-width: 200px;">
+      <span class="card-icon">🔐</span>
+      <h3>← Seguridad</h3>
+      <p>OAuth, JWT, cifrado, Zero Trust, OWASP Top 10.</p>
+    </a>
+    <a class="card" href="../08-interview-prep/index.html" style="flex: 1; min-width: 200px;">
+      <span class="card-icon">🎯</span>
+      <h3>Prep Entrevistas →</h3>
+      <p>Framework completo para responder en entrevistas senior.</p>
+    </a>
+  </div>
+
+</main>
+
+<footer>
+  <p>System Design Guide · <a href="../index.html">← Volver al inicio</a></p>
+</footer>
+
+</body>
+</html>

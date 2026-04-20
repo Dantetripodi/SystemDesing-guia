@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seguridad — System Design Guide</title>
+  <link rel="stylesheet" href="../styles/main.css" />
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="../index.html">⚡ System<span>Design</span></a>
+  <div class="nav-links">
+    <a href="../01-fundamentals/index.html">Fundamentos</a>
+    <a href="../02-components/index.html">Componentes</a>
+    <a href="../03-patterns/index.html">Patrones</a>
+    <a href="../04-databases/index.html">Bases de Datos</a>
+    <a href="../05-apis/index.html">APIs</a>
+    <a href="../06-case-studies/index.html">Casos Reales</a>
+    <a href="../07-infrastructure/index.html">Infraestructura</a>
+    <a href="../08-interview-prep/index.html">Entrevistas</a>
+    <a href="../09-resources/index.html">Recursos</a>
+    <a href="../10-advanced-topics/index.html">Avanzado</a>
+    <a href="../11-security/index.html" class="active">🔐 Seguridad</a>
+    <a href="../12-search/index.html">🔍 Search</a>
+    <a href="../13-soft-skills/index.html">🎭 Soft Skills</a>
+    <a href="../14-leetcode/index.html">⚡ LeetCode</a>
+    <a href="../15-ai-engineering/index.html">🤖 AI Eng</a>
+    <a href="../16-token-optimization/index.html">🪙 Tokens</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / Seguridad</div>
+  <h1>🔐 Seguridad en System Design</h1>
+  <p>El módulo más ignorado en preparación y el que más diferencia a un senior. Autenticación, autorización, cifrado, ataques y defensa en sistemas distribuidos.</p>
+</div>
+
+<main>
+
+  <!-- AUTHN VS AUTHZ -->
+  <div class="section-title">Authentication vs Authorization</div>
+  <p class="section-subtitle">El primer concepto que todo interviewer espera que distingas correctamente.</p>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <span class="card-icon">🪪</span>
+      <h3>Authentication (AuthN)</h3>
+      <p><strong>¿Quién sos?</strong> — Verificar la identidad del usuario o servicio.</p>
+      <ul style="margin-top:0.75rem; padding-left:1.2rem; color:var(--text-muted); font-size:0.88rem; line-height:2;">
+        <li>Username + password</li>
+        <li>OAuth 2.0 / OpenID Connect</li>
+        <li>Biometría, hardware tokens</li>
+        <li>Certificados mTLS (entre servicios)</li>
+        <li>API Keys</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="card-icon">🛡️</span>
+      <h3>Authorization (AuthZ)</h3>
+      <p><strong>¿Qué podés hacer?</strong> — Determinar qué acciones le están permitidas.</p>
+      <ul style="margin-top:0.75rem; padding-left:1.2rem; color:var(--text-muted); font-size:0.88rem; line-height:2;">
+        <li>RBAC — Role-Based Access Control</li>
+        <li>ABAC — Attribute-Based Access Control</li>
+        <li>ACL — Access Control Lists</li>
+        <li>Policy-based (Open Policy Agent)</li>
+        <li>Scopes en OAuth</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <p><strong>Error clásico en entrevistas:</strong> Confundir autenticación con autorización. "El usuario está logueado" (AuthN) no significa "puede editar este recurso" (AuthZ). Siempre verificar ambos en el backend — nunca confiar solo en el frontend.</p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- SESSIONS VS TOKENS -->
+  <div class="section-title">Sessions vs JWT — El Trade-off fundamental</div>
+  <p class="section-subtitle">La decisión de arquitectura más común en AuthN. Cada approach tiene sus casos ideales.</p>
+
+  <div class="diagram">  SESSION-BASED (Stateful):
+
+  1. Usuario hace login
+  2. Server crea una sesión en memoria/Redis → sessionId = "abc123"
+  3. Server devuelve cookie: Set-Cookie: sessionId=abc123
+  4. Cada request → Server consulta: ¿existe abc123? ¿quién es?
+
+  ┌────────┐  login     ┌────────┐  store   ┌───────┐
+  │ Client │──────────→│ Server │─────────→│ Redis │
+  │        │←── cookie ─│        │          │  DB   │
+  └────────┘            └────────┘          └───────┘
+    Cada request: cookie → Redis lookup → User data
+
+  ✅ Revocación instantánea (borra la sesión del server)
+  ✅ Menos datos viajan en cada request
+  ❌ Stateful → sticky sessions o Redis compartido
+  ❌ No funciona bien en microservicios
+
+  ─────────────────────────────────────────────────────
+
+  JWT-BASED (Stateless):
+
+  1. Usuario hace login
+  2. Server genera JWT firmado con secret/private key
+  3. Cliente guarda el JWT (localStorage o cookie httpOnly)
+  4. Cada request → envía JWT en Authorization header
+  5. Server valida la firma — NO necesita DB lookup
+
+  ┌────────┐  login      ┌────────┐
+  │ Client │───────────→│ Server │ (verifica con secret key)
+  │        │←─── JWT ───│        │
+  └────────┘             └────────┘
+    Cada request: JWT → validar firma → payload → User data
+
+  ✅ Stateless → horizontal scaling sin Redis compartido
+  ✅ Funciona perfectamente en microservicios
+  ✅ Claims embebidos (userId, roles, scopes)
+  ❌ NO se puede revocar antes de que expire (el problema)
+  ❌ Payload viaja en cada request (aunque está firmado)</div>
+
+  <div class="grid grid-3">
+    <div class="concept-block">
+      <h4>Estructura de un JWT</h4>
+      <p>header.payload.signature — Cada parte es Base64URL encoded.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>Revocación de JWT</h4>
+      <p>Solución: access token de vida corta (15min) + refresh token de vida larga (7d) en blacklist/whitelist en Redis.</p>
+    </div>
+    <div class="concept-block purple">
+      <h4>Dónde guardar el JWT</h4>
+      <p>Cookie httpOnly + Secure + SameSite=Strict es más seguro que localStorage (vulnerable a XSS).</p>
+    </div>
+  </div>
+
+  <pre><code><span class="cm">// JWT — Anatomía completa</span>
+
+<span class="cm">// HEADER (algoritmo + tipo)</span>
+{
+  <span class="str">"alg"</span>: <span class="str">"RS256"</span>,   <span class="cm">// RSA con SHA-256 (asimétrico — mejor que HS256)</span>
+  <span class="str">"typ"</span>: <span class="str">"JWT"</span>
+}
+
+<span class="cm">// PAYLOAD (claims)</span>
+{
+  <span class="str">"sub"</span>: <span class="str">"user:12345"</span>,    <span class="cm">// subject — userId</span>
+  <span class="str">"iss"</span>: <span class="str">"auth.myapp.com"</span>, <span class="cm">// issuer</span>
+  <span class="str">"aud"</span>: <span class="str">"api.myapp.com"</span>,  <span class="cm">// audience</span>
+  <span class="str">"exp"</span>: <span class="num">1716239022</span>,       <span class="cm">// expiry timestamp (15 min)</span>
+  <span class="str">"iat"</span>: <span class="num">1716238122</span>,       <span class="cm">// issued at</span>
+  <span class="str">"roles"</span>: [<span class="str">"user"</span>, <span class="str">"admin"</span>],
+  <span class="str">"scope"</span>: <span class="str">"read:profile write:posts"</span>
+}
+
+<span class="cm">// SIGNATURE — el server verifica que el token no fue modificado</span>
+<span class="cm">// RS256: firmado con private key, verificado con public key</span>
+<span class="cm">// HS256: mismo secret para firmar y verificar (peor para microservicios)</span></code></pre>
+
+  <hr class="section-divider" />
+
+  <!-- OAUTH 2.0 -->
+  <div class="section-title">OAuth 2.0 + OpenID Connect (OIDC)</div>
+  <p class="section-subtitle">El estándar de la industria para delegación de acceso. Pregunta frecuente en Meta, Google y Stripe.</p>
+
+  <div class="callout">
+    <div class="callout-icon">💡</div>
+    <p><strong>Conceptos clave:</strong> OAuth 2.0 es un framework de <strong>autorización</strong> (delegar acceso). OIDC (OpenID Connect) agrega <strong>autenticación</strong> encima de OAuth — el "Login con Google" usa OIDC.</p>
+  </div>
+
+  <div class="concept-block">
+    <h4>Actores en OAuth 2.0</h4>
+    <p>
+      <strong>Resource Owner:</strong> el usuario que tiene los datos.<br/>
+      <strong>Client:</strong> la aplicación que quiere acceso (tu app).<br/>
+      <strong>Authorization Server:</strong> el que emite tokens (Google, Auth0, tu propio server).<br/>
+      <strong>Resource Server:</strong> la API que protege los datos (Google Drive API).
+    </p>
+  </div>
+
+  <div class="diagram">  AUTHORIZATION CODE FLOW (el más seguro — para web apps):
+
+  ┌────────┐  1. Click "Login con Google"    ┌──────────────┐
+  │  User  │────────────────────────────────→│  Tu App      │
+  │        │                                  │  (Client)    │
+  └────────┘                                  └──────┬───────┘
+      │                                              │
+      │  2. Redirect a Google con:                   │
+      │     client_id, redirect_uri,                 │
+      │     scope, state, code_challenge (PKCE)      │
+      ↓                                              │
+  ┌──────────────────────┐                           │
+  │  Google Auth Server  │                           │
+  │  (Authorization Srv) │                           │
+  └──────────────────────┘                           │
+      │  3. User consiente                           │
+      │  4. Google → redirect con ?code=AUTH_CODE    │
+      ↓                                              │
+  ┌────────┐                                         │
+  │  User  │──── 4. code en URL ────────────────────→│
+  │Browser │                                         │
+  └────────┘                                         ↓
+                                         5. Tu App intercambia:
+                                            code + client_secret
+                                            → Google Server
+                                         6. Recibe: access_token
+                                                     refresh_token
+                                                     id_token (OIDC)
+
+  7. Tu App usa access_token para llamar Google Drive API
+  ✅ code viaja por el browser (URL)
+  ✅ tokens van server-to-server (más seguro)
+  ✅ PKCE previene code interception attacks</div>
+
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>Client Credentials Flow</h4>
+      <p>Machine-to-machine. No hay usuario. Tu microservicio A obtiene token para llamar microservicio B. El client_id + client_secret se intercambian directamente por un access_token. Usado en backend APIs, cronjobs, pipelines.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>Scopes — Principio de menor privilegio</h4>
+      <p>El access_token tiene scopes que limitan qué puede hacer. Ejemplo: <code>scope="read:email"</code> no le da acceso a calendar. Diseña tus APIs con scopes granulares desde el día uno.</p>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- RBAC vs ABAC -->
+  <div class="section-title">RBAC vs ABAC — Modelos de Autorización</div>
+  <p class="section-subtitle">Cómo decidir qué puede hacer cada usuario en sistemas complejos.</p>
+
+  <div class="diagram">  RBAC — Role-Based Access Control:
+
+  Usuario → tiene Roles → Roles tienen Permisos
+
+  user: alice
+  roles: [admin, editor]
+
+  admin role: [read:*, write:*, delete:*]
+  editor role: [read:posts, write:posts]
+
+  ¿Puede alice borrar un post?
+  → alice tiene "admin" → admin tiene "delete:*" → ✅ SÍ
+
+  Casos de uso: Sistemas internos, SaaS con plans (free/pro/enterprise)
+  Pros: Simple de entender y auditar
+  Cons: Explosión de roles en sistemas complejos ("role explosion")
+
+  ─────────────────────────────────────────────────────
+
+  ABAC — Attribute-Based Access Control:
+
+  Decisión basada en atributos del user, resource, y contexto.
+  Política: "ALLOW if user.department == resource.department AND time < 18:00"
+
+  user.attributes: { dept: "engineering", clearance: "L3", location: "AR" }
+  resource.attributes: { dept: "engineering", sensitivity: "internal" }
+  context: { time: "14:00", ip: "10.0.0.1" }
+
+  Evaluación: ¿user.dept == resource.dept? → ✅ SÍ → ALLOW
+
+  Casos de uso: Fintech, healthcare, sistemas con compliance complejo
+  Pros: Extremadamente flexible y granular
+  Cons: Complejo de implementar y debuggear</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Aspecto</th>
+        <th>RBAC</th>
+        <th>ABAC</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Complejidad</td><td>Baja</td><td>Alta</td></tr>
+      <tr><td>Flexibilidad</td><td>Media</td><td>Muy alta</td></tr>
+      <tr><td>Performance</td><td>Alta (lookup simple)</td><td>Media (evaluar políticas)</td></tr>
+      <tr><td>Auditoría</td><td>Fácil</td><td>Compleja</td></tr>
+      <tr><td>Cuando usarlo</td><td>SaaS, apps internas</td><td>Gobierno, fintech, healthcare</td></tr>
+      <tr><td>Herramientas</td><td>Auth0, Casbin</td><td>Open Policy Agent (OPA), Cedar</td></tr>
+    </tbody>
+  </table>
+
+  <hr class="section-divider" />
+
+  <!-- ENCRIPCIÓN -->
+  <div class="section-title">Cifrado — En Tránsito y En Reposo</div>
+  <p class="section-subtitle">Los dos vectores de ataque que todo sistema debe cubrir.</p>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <span class="card-icon">🔒</span>
+      <h3>Encryption at Rest</h3>
+      <p>Datos cifrados cuando están almacenados (discos, backups, snapshots).</p>
+      <ul style="margin-top:0.75rem; padding-left:1.2rem; color:var(--text-muted); font-size:0.88rem; line-height:2;">
+        <li><strong>AES-256</strong> — estándar de la industria para datos en reposo</li>
+        <li><strong>Full disk encryption</strong> — AWS EBS, Azure Disk</li>
+        <li><strong>Field-level encryption</strong> — cifrar columnas específicas (PII)</li>
+        <li><strong>Key Management</strong> — AWS KMS, HashiCorp Vault, GCP Cloud KMS</li>
+        <li>Rotación de keys sin downtime</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="card-icon">🔐</span>
+      <h3>Encryption in Transit</h3>
+      <p>Datos cifrados mientras viajan por la red. Nadie puede leerlos si interceptan el tráfico.</p>
+      <ul style="margin-top:0.75rem; padding-left:1.2rem; color:var(--text-muted); font-size:0.88rem; line-height:2;">
+        <li><strong>TLS 1.3</strong> — obligatorio en cualquier sistema moderno</li>
+        <li><strong>HTTPS</strong> — TLS aplicado a HTTP</li>
+        <li><strong>mTLS</strong> — mutual TLS, ambos lados se autentican (microservicios)</li>
+        <li>Certificate pinning (mobile apps)</li>
+        <li>HSTS header — fuerza siempre HTTPS</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="diagram">  TLS HANDSHAKE (simplificado) — TLS 1.3:
+
+  Client                              Server
+    │                                   │
+    │──── ClientHello ──────────────────→│
+    │     (TLS version, cipher suites,  │
+    │      client random)               │
+    │                                   │
+    │←─── ServerHello ──────────────────│
+    │     (chosen cipher suite,         │
+    │      server random,               │
+    │      certificate con public key)  │
+    │                                   │
+    │  Client verifica el certificado   │
+    │  contra una CA (Certificate Auth) │
+    │                                   │
+    │──── Finished (con session key) ───→│
+    │     (key derivada de los randoms  │
+    │      usando el algoritmo acordado)│
+    │                                   │
+    │  ══════ CANAL CIFRADO ══════════  │
+    │←════════ Datos cifrados ══════════│
+
+  TLS 1.3 mejoras sobre 1.2:
+  ✅ 1-RTT handshake (antes 2-RTT)
+  ✅ 0-RTT para reconexión (session resumption)
+  ✅ Forward Secrecy obligatorio (ECDHE)</div>
+
+  <div class="concept-block purple">
+    <h4>Symmetric vs Asymmetric Encryption</h4>
+    <p>
+      <strong>Simétrico (AES):</strong> misma key para cifrar y descifrar. Muy rápido. Problema: cómo intercambiar la key de forma segura.<br/>
+      <strong>Asimétrico (RSA, ECDSA):</strong> par de keys — public key cifra, private key descifra. Lento, pero resuelve el intercambio de keys.<br/>
+      <strong>En la práctica:</strong> TLS usa asimétrico para acordar una key simétrica de sesión → luego usa simétrico para el resto (mejor performance).
+    </p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- ATAQUES Y DEFENSAS -->
+  <div class="section-title">Top Ataques & Defensa — OWASP Top 10</div>
+  <p class="section-subtitle">Los vectores de ataque más comunes y cómo los sistemas senior los mitigan.</p>
+
+  <div class="concept-block red">
+    <h4>SQL Injection</h4>
+    <p><strong>Ataque:</strong> Input malicioso modifica la query SQL. <code>'; DROP TABLE users; --</code><br/>
+    <strong>Defensa:</strong> Parameterized queries / Prepared statements siempre. NUNCA concatenar strings para SQL. ORM ayuda pero no es suficiente solo.</p>
+  </div>
+
+  <div class="concept-block red">
+    <h4>XSS — Cross-Site Scripting</h4>
+    <p><strong>Ataque:</strong> Inyectar JS malicioso en páginas vistas por otros usuarios. Roba cookies, sesiones, datos.<br/>
+    <strong>Defensa:</strong> Content Security Policy (CSP) header. Escapar output HTML. httpOnly cookies (JS no puede leerlas). Sanitizar todo input de usuarios.</p>
+  </div>
+
+  <div class="concept-block orange">
+    <h4>CSRF — Cross-Site Request Forgery</h4>
+    <p><strong>Ataque:</strong> Sitio malicioso hace requests a tu API usando las cookies del usuario logueado.<br/>
+    <strong>Defensa:</strong> CSRF tokens en forms. <code>SameSite=Strict</code> o <code>SameSite=Lax</code> en cookies. Verificar Origin/Referer header. Para APIs REST con JWT en header → CSRF no aplica.</p>
+  </div>
+
+  <div class="concept-block red">
+    <h4>DDoS — Distributed Denial of Service</h4>
+    <p><strong>Ataque:</strong> Inundar el sistema con tráfico para hacerlo inaccesible.<br/>
+    <strong>Defensa en capas:</strong> CDN absorbe tráfico de ataque (Cloudflare, AWS Shield). Rate limiting por IP. WAF (Web Application Firewall). Auto-scaling. CAPTCHA para humanos. Anycast routing para distribuir el ataque.</p>
+  </div>
+
+  <div class="concept-block orange">
+    <h4>MITM — Man in the Middle</h4>
+    <p><strong>Ataque:</strong> Interceptar comunicación entre cliente y servidor para leer o modificar datos.<br/>
+    <strong>Defensa:</strong> TLS 1.3 obligatorio. HSTS (HTTP Strict Transport Security). Certificate Transparency logs. Certificate pinning en apps móviles críticas.</p>
+  </div>
+
+  <div class="concept-block">
+    <h4>Broken Authentication</h4>
+    <p><strong>Ataques:</strong> Credential stuffing, brute force, session hijacking.<br/>
+    <strong>Defensa:</strong> Rate limiting en login. MFA (Multi-Factor Auth). bcrypt/Argon2 para hashear passwords (nunca MD5/SHA1). Tokens de sesión con entropía suficiente. Logout seguro (invalida sesión en server).</p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- SECRETS MANAGEMENT -->
+  <div class="section-title">Secrets Management</div>
+  <p class="section-subtitle">Cómo manejar credenciales, API keys y secretos en sistemas de producción.</p>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <p><strong>Regla #1:</strong> Nunca hardcodear credenciales en el código fuente. Nunca commitear .env files con secrets. En 2024, el 14% de los repos públicos en GitHub tienen secrets expuestos.</p>
+  </div>
+
+  <div class="grid grid-3">
+    <div class="concept-block">
+      <h4>Environment Variables</h4>
+      <p>Mínimo viable. Secretos en variables de entorno, nunca en el código. Suficiente para proyectos chicos. Problema: difícil de rotar y auditar a escala.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>AWS Secrets Manager / GCP Secret Manager</h4>
+      <p>Almacenamiento centralizado, rotación automática, integración nativa con IAM. La opción estándar en clouds. Versioning automático.</p>
+    </div>
+    <div class="concept-block purple">
+      <h4>HashiCorp Vault</h4>
+      <p>Solución open source multi-cloud. Dynamic secrets (genera credenciales de DB por cada servicio, con TTL). Ideal para infraestructura compleja o on-premise.</p>
+    </div>
+  </div>
+
+  <div class="diagram">  DYNAMIC SECRETS con HashiCorp Vault:
+
+  Sin Vault:
+  App → tiene "admin:password123" hardcodeado → todos los servicios
+        usan la misma credencial → un leak compromete todo
+
+  Con Vault Dynamic Secrets:
+  ServiceA → solicita credencial a Vault → Vault genera:
+    usuario: "svc-a-abc123" / password: "xyz789" / TTL: 1 hora
+  ServiceB → solicita credencial a Vault → Vault genera:
+    usuario: "svc-b-def456" / password: "uvw012" / TTL: 1 hora
+
+  ✅ Credenciales únicas por servicio
+  ✅ Expiran automáticamente (TTL)
+  ✅ Rotación sin downtime
+  ✅ Auditoría completa de quién pidió qué</div>
+
+  <hr class="section-divider" />
+
+  <!-- ZERO TRUST -->
+  <div class="section-title">Zero Trust Architecture</div>
+  <p class="section-subtitle">"Never trust, always verify" — El modelo de seguridad para arquitecturas modernas de microservicios.</p>
+
+  <div class="concept-block">
+    <h4>El viejo modelo (Perimeter Security)</h4>
+    <p>Si estás adentro de la red corporativa, confiamos en vos. Problema: un atacante que entra a la red puede moverse libremente. El 75% de los ataques vienen de adentro o de credenciales comprometidas.</p>
+  </div>
+
+  <div class="concept-block green">
+    <h4>Zero Trust — Principios Core</h4>
+    <p>
+      1. <strong>Verify explicitly</strong> — Autenticar y autorizar cada request, sin importar origen.<br/>
+      2. <strong>Least privilege</strong> — Acceso mínimo necesario. No más.<br/>
+      3. <strong>Assume breach</strong> — Diseñar como si el atacante ya estuviera adentro. Limitar blast radius.
+    </p>
+  </div>
+
+  <div class="diagram">  ZERO TRUST en Microservicios — Service Mesh con mTLS:
+
+  Tradicional (trust interno):
+  ServiceA ──────────── HTTP ──────────────→ ServiceB
+             (sin autenticación entre servicios)
+
+  Zero Trust con mTLS (mutual TLS):
+  ServiceA                                   ServiceB
+  ┌─────────┐  presenta certificado   ┌─────────┐
+  │  App    │←──────────────────────→│  App    │
+  │  +      │  verifica certificado  │  +      │
+  │  Envoy  │  de ambos lados        │  Envoy  │
+  │ Sidecar │  Conexión cifrada      │ Sidecar │
+  └─────────┘  E2E                   └─────────┘
+      │                                   │
+      └───────────────────────────────────┘
+              Istio / Linkerd (Service Mesh)
+              gestiona certificados automáticamente
+
+  ✅ Cada servicio debe autenticarse
+  ✅ Todo el tráfico interno está cifrado
+  ✅ Políticas de red granulares (ServiceA puede llamar ServiceB
+     pero NO ServiceC)</div>
+
+  <hr class="section-divider" />
+
+  <!-- HASHING DE PASSWORDS -->
+  <div class="section-title">Hashing de Passwords</div>
+  <p class="section-subtitle">Los passwords nunca se guardan en texto plano. Nunca.</p>
+
+  <div class="concept-block red">
+    <h4>Lo que NUNCA hay que hacer</h4>
+    <p>Guardar en texto plano. Usar MD5 o SHA1 (crackeables con rainbow tables en segundos). Usar SHA256 sin salt (vulnerable a rainbow tables).</p>
+  </div>
+
+  <pre><code><span class="cm">// ✅ bcrypt — estándar mínimo aceptable</span>
+<span class="kw">import</span> bcrypt
+
+<span class="cm"># Al guardar el password:</span>
+salt = bcrypt.gensalt(rounds=<span class="num">12</span>)  <span class="cm"># work factor — aumenta costo computacional</span>
+hashed = bcrypt.hashpw(password.encode(), salt)
+<span class="cm"># guardar 'hashed' en la DB</span>
+
+<span class="cm"># Al verificar:</span>
+bcrypt.checkpw(attempt.encode(), hashed_from_db)  <span class="cm"># True/False</span>
+
+<span class="cm">// ✅✅ Argon2id — el más recomendado hoy (ganó Password Hashing Competition 2015)</span>
+<span class="cm"># Resiste ataques GPU y side-channel</span>
+<span class="cm"># Parámetros: memory cost, time cost, parallelism</span>
+<span class="kw">from</span> argon2 <span class="kw">import</span> PasswordHasher
+ph = PasswordHasher(time_cost=<span class="num">2</span>, memory_cost=<span class="num">65536</span>, parallelism=<span class="num">2</span>)
+hash = ph.hash(password)
+ph.verify(hash, attempt)</code></pre>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Algoritmo</th>
+        <th>Seguridad</th>
+        <th>Velocidad</th>
+        <th>Recomendación</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>MD5</td><td>Rota ❌</td><td>Muy rápido</td><td>NUNCA para passwords</td></tr>
+      <tr><td>SHA-256</td><td>Sin salt ❌</td><td>Rápido</td><td>NUNCA para passwords</td></tr>
+      <tr><td>bcrypt</td><td>Buena ✅</td><td>Lento (intencional)</td><td>Mínimo aceptable</td></tr>
+      <tr><td>scrypt</td><td>Muy buena ✅</td><td>Muy lento (memory-hard)</td><td>Buena opción</td></tr>
+      <tr><td>Argon2id</td><td>Excelente ✅✅</td><td>Configurable</td><td>Mejor opción actual</td></tr>
+    </tbody>
+  </table>
+
+  <hr class="section-divider" />
+
+  <!-- RATE LIMITING COMO SEGURIDAD -->
+  <div class="section-title">Rate Limiting como Herramienta de Seguridad</div>
+  <p class="section-subtitle">No es solo performance — es la primera línea de defensa.</p>
+
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>Token Bucket</h4>
+      <p>Un bucket tiene capacidad N. Se llena a velocidad R tokens/segundo. Cada request consume 1 token. Si no hay tokens → 429 Too Many Requests. Permite bursts controlados.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>Sliding Window Counter</h4>
+      <p>Ventana de tiempo que se desliza. Más preciso que fixed window (evita el double-hit en el boundary). Implementación con Redis ZADD/ZREMRANGEBYSCORE.</p>
+    </div>
+  </div>
+
+  <div class="concept-block purple">
+    <h4>Estrategias de Rate Limiting por Layer</h4>
+    <p>
+      <strong>Por IP:</strong> Defensa DDoS básica (1000 req/min por IP).<br/>
+      <strong>Por Usuario/API Key:</strong> Business logic (100 req/min en plan gratuito).<br/>
+      <strong>Por Endpoint:</strong> Más estricto en endpoints sensibles (login: 5 intentos/min).<br/>
+      <strong>Global:</strong> Límite total del sistema para proteger backends.<br/>
+      <strong>En el API Gateway:</strong> Kong, AWS API Gateway, Nginx — rate limiting centralizado.
+    </p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- SECURITY EN MICROSERVICIOS -->
+  <div class="section-title">Security Design en Microservicios</div>
+  <p class="section-subtitle">Cómo diseñar seguridad end-to-end en arquitecturas distribuidas.</p>
+
+  <div class="diagram">  SECURITY LAYERS en un sistema de producción:
+
+  Internet
+     │
+     ▼
+  ┌─────────────────────────────────────────┐
+  │  CDN + DDoS Protection (Cloudflare)     │  Layer 1: Network
+  │  WAF — Web Application Firewall         │
+  └─────────────────────────────────────────┘
+     │
+     ▼
+  ┌─────────────────────────────────────────┐
+  │  API Gateway                            │  Layer 2: API
+  │  - TLS termination                      │
+  │  - Rate limiting                        │
+  │  - API Key validation                   │
+  │  - JWT verification                     │
+  └─────────────────────────────────────────┘
+     │
+     ▼
+  ┌─────────────────────────────────────────┐
+  │  Auth Service                           │  Layer 3: AuthN/AuthZ
+  │  - OAuth 2.0 / OIDC                     │
+  │  - RBAC / ABAC policies                 │
+  │  - Token issuance / validation          │
+  └─────────────────────────────────────────┘
+     │
+     ▼
+  ┌─────────────────────────────────────────┐
+  │  Microservices (mTLS entre servicios)   │  Layer 4: Service
+  │  - Cada servicio verifica identidad     │
+  │  - Least privilege entre servicios      │
+  │  - No secrets en código                 │
+  └─────────────────────────────────────────┘
+     │
+     ▼
+  ┌─────────────────────────────────────────┐
+  │  Data Layer                             │  Layer 5: Data
+  │  - Encryption at rest (AES-256)         │
+  │  - PII field-level encryption           │
+  │  - DB credentials via Vault             │
+  │  - Backup encryption                    │
+  └─────────────────────────────────────────┘</div>
+
+  <hr class="section-divider" />
+
+  <!-- PREGUNTAS DE ENTREVISTA -->
+  <div class="section-title">Preguntas de Entrevista — Seguridad</div>
+  <p class="section-subtitle">Las preguntas que aparecen en entrevistas semi-senior y senior en FAANG.</p>
+
+  <div class="concept-block">
+    <h4>"Diseñá un sistema de autenticación para una app con millones de usuarios"</h4>
+    <p>
+      Respuesta esperada: OAuth 2.0 + OIDC para terceros. JWT con access token (15min) + refresh token (7d, httpOnly cookie). Redis para blacklist de refresh tokens revocados. bcrypt/Argon2 para passwords. Rate limiting en /login (5 req/min por IP). MFA opcional vía TOTP (Google Authenticator). Audit logs de todos los logins.
+    </p>
+  </div>
+
+  <div class="concept-block green">
+    <h4>"¿Cómo asegurás comunicación entre microservicios?"</h4>
+    <p>
+      mTLS entre servicios (Istio/Linkerd gestiona certificados automáticamente). Service accounts con least privilege. API Gateway valida tokens externos. Secrets en HashiCorp Vault o AWS Secrets Manager. Network policies en Kubernetes (solo servicios autorizados pueden comunicarse). Audit logging de todas las llamadas entre servicios.
+    </p>
+  </div>
+
+  <div class="concept-block purple">
+    <h4>"¿Cómo previenen que un empleado malicioso acceda a datos de usuarios?"</h4>
+    <p>
+      Data classification (PII, sensitive, public). Field-level encryption de datos sensibles — ni siquiera DBAs pueden leer los datos en texto plano. Break-glass procedures para acceso de emergencia (con aprobación y audit). Audit logs inmutables (CloudTrail). RBAC estricto — developers de producción no deben tener acceso directo a datos de usuarios. Data masking en logs (nunca loggear passwords, tokens, o PII completos).
+    </p>
+  </div>
+
+  <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+    <a class="card" href="../05-apis/index.html" style="flex: 1; min-width: 200px;">
+      <span class="card-icon">🔌</span>
+      <h3>← APIs</h3>
+      <p>Rate limiting, autenticación en APIs REST y GraphQL.</p>
+    </a>
+    <a class="card" href="../12-search/index.html" style="flex: 1; min-width: 200px;">
+      <span class="card-icon">🔍</span>
+      <h3>Siguiente: Search →</h3>
+      <p>Elasticsearch, inverted index, type-ahead, vector search.</p>
+    </a>
+  </div>
+
+</main>
+
+<footer>
+  <p>System Design Guide · <a href="../index.html">← Volver al inicio</a></p>
+</footer>
+
+</body>
+</html>

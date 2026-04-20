@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Token Optimization — System Design Guide</title>
+  <link rel="stylesheet" href="../styles/main.css" />
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="../index.html">⚡ System<span>Design</span></a>
+  <div class="nav-links">
+    <a href="../01-fundamentals/index.html">Fundamentos</a>
+    <a href="../02-components/index.html">Componentes</a>
+    <a href="../03-patterns/index.html">Patrones</a>
+    <a href="../04-databases/index.html">Bases de Datos</a>
+    <a href="../05-apis/index.html">APIs</a>
+    <a href="../06-case-studies/index.html">Casos Reales</a>
+    <a href="../07-infrastructure/index.html">Infraestructura</a>
+    <a href="../08-interview-prep/index.html">Entrevistas</a>
+    <a href="../09-resources/index.html">Recursos</a>
+    <a href="../10-advanced-topics/index.html">Avanzado</a>
+    <a href="../11-security/index.html">🔐 Seguridad</a>
+    <a href="../12-search/index.html">🔍 Search</a>
+    <a href="../13-soft-skills/index.html">🎭 Soft Skills</a>
+    <a href="../14-leetcode/index.html">⚡ LeetCode</a>
+    <a href="../15-ai-engineering/index.html">🤖 AI Eng</a>
+    <a href="../16-token-optimization/index.html" class="active">🪙 Tokens</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / Token Optimization</div>
+  <h1>🪙 Claude Code: Token Optimization</h1>
+  <p>10 repos de GitHub que reducen el consumo de tokens en Claude Code hasta un 90%. Cómo instalarlos, configurarlos y combinarlos para maximizar tu productividad y minimizar costos.</p>
+  <div class="hero-badges">
+    <span class="badge">💰 Hasta -90% tokens</span>
+    <span class="badge">🔧 10 repos curados</span>
+    <span class="badge">⚡ Setup inmediato</span>
+    <span class="badge">🧠 Context Engineering</span>
+    <span class="badge">🚀 Claude Code Pro</span>
+  </div>
+</div>
+
+<main>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- 0. POR QUÉ IMPORTAN LOS TOKENS              -->
+<!-- ════════════════════════════════════════════ -->
+<div class="section-title">0 · ¿Por qué importan los tokens en Claude Code?</div>
+<div class="section-subtitle">El contexto es limitado y caro — cada token que ahorras es dinero y calidad</div>
+
+<div class="callout">
+  <div class="callout-icon">💡</div>
+  <p><strong>Context Window de Claude:</strong> Claude tiene una ventana de contexto de 200K tokens (claude-sonnet-4). Cuando usás Claude Code en proyectos grandes, el solo hecho de leer archivos puede consumir decenas de miles de tokens por sesión. Con el plan Pro (~$20/mes) tenés límites de uso. Optimizar tokens = más trabajo en menos tiempo + menos interrupciones por rate limits.</p>
+</div>
+
+<div class="grid grid-3">
+  <div class="concept-block">
+    <h4>📊 El problema de escala</h4>
+    <p>Un repo de 50K líneas de código tiene ~500K tokens solo en archivos fuente. Cargar todo el contexto por cada pregunta es ineficiente. Claude necesita <em>contexto relevante</em>, no todo el codebase.</p>
+  </div>
+  <div class="concept-block green">
+    <h4>💸 Costo real</h4>
+    <p>Claude Sonnet 4: $3 / 1M tokens input. Una sesión de trabajo de 2 horas sin optimización puede consumir 500K–1M tokens. Con las herramientas correctas: 50K–100K tokens. <strong>Ahorro: 80–90%.</strong></p>
+  </div>
+  <div class="concept-block purple">
+    <h4>🧠 Calidad del output</h4>
+    <p>Menos tokens no es solo costo — es calidad. Con contexto más limpio y relevante, Claude entiende mejor tu intent y comete menos errores. <strong>Context = signal, no noise.</strong></p>
+  </div>
+</div>
+
+<div class="concept-block orange">
+  <h4>🔑 Las 4 palancas de optimización</h4>
+  <ul style="color:var(--text-muted);font-size:.9rem;padding-left:1.25rem;line-height:2.2;margin-top:.5rem">
+    <li><strong>Indexación semántica:</strong> En vez de leer archivos enteros, buscar solo los fragmentos relevantes (semantic search sobre el codebase)</li>
+    <li><strong>Compresión de contexto:</strong> Comprimir conversaciones largas antes de que roten, preservando lo importante</li>
+    <li><strong>CLAUDE.md optimizado:</strong> Instructions compactas, no verbosas — cada línea que ponés en CLAUDE.md se carga en cada turno</li>
+    <li><strong>Tool call efficiency:</strong> Agrupar operaciones, evitar reads redundantes, cachear resultados de herramientas</li>
+  </ul>
+</div>
+
+<hr class="section-divider" />
+
+<!-- ════════════════════════════════════════════ -->
+<!-- 1. MAPA DE LOS 10 REPOS                     -->
+<!-- ════════════════════════════════════════════ -->
+<div class="section-title">1 · Mapa: 10 repos, 4 categorías</div>
+<div class="section-subtitle">Clasificados por tipo de optimización para saber cuál usar según tu problema</div>
+
+<div class="grid grid-2">
+
+  <div class="card">
+    <span class="card-icon">🗂️</span>
+    <h3>Categoría A — Context Indexing</h3>
+    <p>Reemplazan leer archivos completos por búsqueda semántica. Ahorro: <strong>60–90%</strong></p>
+    <ul style="color:var(--text-muted);font-size:.85rem;padding-left:1.1rem;line-height:2;margin-top:.75rem">
+      <li>📦 <strong>Context Mode</strong> — MCP plugin con FTS5 + vector search</li>
+      <li>📦 <strong>claude-context (Zilliz)</strong> — RAG sobre codebase con Milvus</li>
+      <li>📦 <strong>RTK (Retrieval Toolkit)</strong> — toolkit para retrieval eficiente</li>
+    </ul>
+    <span class="tag tag-blue">Mayor impacto</span>
+  </div>
+
+  <div class="card">
+    <span class="card-icon">🗜️</span>
+    <h3>Categoría B — Compresión y Formato</h3>
+    <p>Optimizan cómo se estructuran prompts, respuestas y conversaciones. Ahorro: <strong>30–60%</strong></p>
+    <ul style="color:var(--text-muted);font-size:.85rem;padding-left:1.1rem;line-height:2;margin-top:.75rem">
+      <li>📦 <strong>Token Savior</strong> — comprime contexto automáticamente</li>
+      <li>📦 <strong>claude-token-efficient</strong> — formato minimalista para Claude</li>
+      <li>📦 <strong>Caveman Claude</strong> — instrucciones primitivas = menos tokens</li>
+    </ul>
+    <span class="tag tag-green">Rápido de adoptar</span>
+  </div>
+
+  <div class="card">
+    <span class="card-icon">⚙️</span>
+    <h3>Categoría C — MCP Optimizers</h3>
+    <p>Servidores MCP que interceptan y optimizan tool calls. Ahorro: <strong>40–70%</strong></p>
+    <ul style="color:var(--text-muted);font-size:.85rem;padding-left:1.1rem;line-height:2;margin-top:.75rem">
+      <li>📦 <strong>token-optimizer-mcp</strong> — MCP server que comprime outputs</li>
+      <li>📦 <strong>claude-token-optimizer</strong> — middleware para API calls</li>
+    </ul>
+    <span class="tag tag-purple">Para power users</span>
+  </div>
+
+  <div class="card">
+    <span class="card-icon">🔬</span>
+    <h3>Categoría D — Análisis y Workflows</h3>
+    <p>Tools para entender y mejorar flujos de trabajo. Ahorro: <strong>20–50%</strong></p>
+    <ul style="color:var(--text-muted);font-size:.85rem;padding-left:1.1rem;line-height:2;margin-top:.75rem">
+      <li>📦 <strong>code-review-graph</strong> — grafos de dependencias para reviews eficientes</li>
+      <li>📦 <strong>token-optimizer</strong> — CLI para analizar y comprimir prompts</li>
+    </ul>
+    <span class="tag tag-orange">Complementario</span>
+  </div>
+
+</div>
+
+<hr class="section-divider" />
+
+<!-- ════════════════════════════════════════════ -->
+<!-- 2. REPO POR REPO                            -->
+<!-- ════════════════════════════════════════════ -->
+<div class="section-title">2 · Guía completa por repo</div>
+<div class="section-subtitle">Setup, uso y casos de aplicación para cada herramienta</div>
+
+<!-- ── CONTEXT MODE ── -->
+<div class="concept-block" style="border-left-color:#58a6ff">
+  <h4>📦 1 · Context Mode — El más poderoso (-60 a -90% tokens)</h4>
+  <p>Plugin MCP para Claude Code que indexa tu codebase en una base de datos FTS5 (Full Text Search) en SQLite. En vez de leer archivos completos, Claude busca solo los fragmentos relevantes. <strong>Es el que mayor impacto tiene de todos.</strong></p>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <span class="card-icon">⚡</span>
+    <h3>Setup Context Mode</h3>
+    <pre><code><span class="cm"># Buscar en GitHub: "context-mode claude code"</span>
+<span class="cm"># o el plugin que ya tenés activo en esta sesión</span>
+
+<span class="cm"># 1. Instalar el plugin MCP</span>
+npm install -g context-mode-mcp
+<span class="cm"># o via Claude Code settings</span>
+
+<span class="cm"># 2. Configurar en .claude/settings.json</span>
+{
+  "mcpServers": {
+    "context-mode": {
+      "command": "context-mode-mcp",
+      "args": ["--index-dir", ".context-mode"]
+    }
+  }
+}
+
+<span class="cm"># 3. Indexar el proyecto</span>
+<span class="cm"># Claude Code lo hace automáticamente</span>
+<span class="cm"># o forzar re-index con /ctx-index</span></code></pre>
+  </div>
+  <div class="card">
+    <span class="card-icon">🔍</span>
+    <h3>Cómo funciona internamente</h3>
+    <pre><code><span class="cm"># Sin Context Mode:</span>
+Read(file) → 2000 tokens por archivo
+× 20 archivos = 40,000 tokens / query
+
+<span class="cm"># Con Context Mode:</span>
+ctx_search("implementación de auth")
+→ devuelve 5 fragmentos relevantes
+→ ~500 tokens / query
+
+<span class="cm"># Flujo interno:</span>
+1. Indexa archivos → SQLite FTS5
+2. Claude llama ctx_search(query)
+3. FTS5 retorna top-N fragmentos
+4. Claude ve solo lo relevante
+5. 90% menos tokens en reads</code></pre>
+  </div>
+</div>
+
+<div class="callout success">
+  <div class="callout-icon">✅</div>
+  <p><strong>Tip de uso:</strong> Después de instalar Context Mode, cambiá tu flujo de trabajo. En vez de decirle a Claude "lee el archivo X", decí <strong>"buscá cómo está implementado X en el proyecto"</strong>. Context Mode va a encontrar los fragmentos relevantes sin cargar el archivo completo.</p>
+</div>
+
+<!-- ── CLAUDE-CONTEXT ZILLIZ ── -->
+<div class="concept-block green">
+  <h4>📦 2 · claude-context (Zilliz) — RAG sobre tu codebase (-70% tokens)</h4>
+  <p>Solución de Zilliz (creadores de Milvus) que implementa RAG (Retrieval-Augmented Generation) sobre tu codebase usando Milvus Lite como vector database embebida. Chunks el código, genera embeddings, y hace búsqueda semántica en cada consulta.</p>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <span class="card-icon">🚀</span>
+    <h3>Setup Zilliz claude-context</h3>
+    <pre><code><span class="cm"># GitHub: github.com/zilliztech/claude-context</span>
+
+pip install claude-context milvus-lite
+
+<span class="cm"># Indexar proyecto</span>
+claude-context index ./src \
+  --chunk-size 200 \
+  --overlap 50 \
+  --model text-embedding-3-small
+
+<span class="cm"># Iniciar servidor MCP</span>
+claude-context serve --port 3000
+
+<span class="cm"># Agregar a Claude Code</span>
+<span class="cm"># .claude/settings.json:</span>
+{
+  "mcpServers": {
+    "codebase": {
+      "url": "http://localhost:3000"
+    }
+  }
+}</code></pre>
+  </div>
+  <div class="card">
+    <span class="card-icon">🧠</span>
+    <h3>Diferencia vs Context Mode</h3>
+    <pre><code><span class="cm"># Context Mode: FTS5 (keyword-based)</span>
+ctx_search("getUserById")
+→ busca texto exacto
+→ rápido, sin GPU
+
+<span class="cm"># Zilliz: Semántico (embedding-based)</span>
+vector_search("get user from database")
+→ entiende intención
+→ encuentra aunque no tenga
+   las palabras exactas
+→ necesita embeddings (API call)
+
+<span class="cm"># Cuándo usar cada uno:</span>
+- FTS5: repos con naming claro
+- Semántico: repos legacy / docs
+- Ideal: ambos en paralelo</code></pre>
+  </div>
+</div>
+
+<!-- ── RTK ── -->
+<div class="concept-block purple">
+  <h4>📦 3 · RTK (Retrieval Toolkit) — Retrieval eficiente para Claude Code</h4>
+  <p>Toolkit que provee múltiples estrategias de retrieval: BM25, dense retrieval, y hybrid search. Diseñado específicamente para el flujo de Claude Code, con caché de resultados y re-ranking automático.</p>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <span class="card-icon">📐</span>
+    <h3>Setup RTK</h3>
+    <pre><code><span class="cm"># Buscar: "RTK retrieval toolkit claude"</span>
+npm install @rtk/claude-retrieval
+
+<span class="cm"># Configurar en CLAUDE.md:</span>
+## Retrieval Strategy
+- Use RTK for all file lookups
+- Prefer semantic search over Read
+- Cache results within session
+
+<span class="cm"># En .rtk/config.json:</span>
+{
+  "strategy": "hybrid",
+  "bm25_weight": 0.4,
+  "dense_weight": 0.6,
+  "top_k": 5,
+  "rerank": true,
+  "cache_ttl": 3600
+}</code></pre>
+  </div>
+  <div class="card">
+    <span class="card-icon">⚖️</span>
+    <h3>Hybrid Search en práctica</h3>
+    <pre><code><span class="cm"># BM25 (keyword):
+# + Exacto con nombres de funciones
+# + Sin dependencias externas
+# - No entiende sinónimos</span>
+
+<span class="cm"># Dense (embedding):
+# + Semántico, entiende intención
+# + Funciona con código comentado
+# - Requiere embedding API</span>
+
+<span class="cm"># Hybrid (RTK default):
+score = 0.4*bm25 + 0.6*dense
+# Mejor de ambos mundos
+# Re-ranker cross-encoder
+# al final mejora aún más</span>
+
+<span class="cm"># Resultado típico:
+# Query: "validación de formularios"
+# → 5 fragmentos relevantes
+# → 300 tokens vs 15K del archivo</span></code></pre>
+  </div>
+</div>
+
+<!-- ── TOKEN SAVIOR ── -->
+<div class="concept-block orange">
+  <h4>📦 4 · Token Savior — Compresión automática de contexto (-40% tokens)</h4>
+  <p>Hook de Claude Code que intercepta conversaciones largas y las comprime automáticamente antes de que el contexto rote. Preserva los puntos clave y descarta el ruido acumulado en sesiones largas.</p>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <span class="card-icon">💾</span>
+    <h3>Setup Token Savior</h3>
+    <pre><code><span class="cm"># GitHub: buscar "token-savior claude"</span>
+pip install token-savior
+
+<span class="cm"># Configurar hook en Claude Code</span>
+<span class="cm"># .claude/settings.json:</span>
+{
+  "hooks": {
+    "prePrompt": "token-savior compress",
+    "thresholdTokens": 50000,
+    "preserveRatio": 0.3
+  }
+}
+
+<span class="cm"># O manual vía comando:</span>
+token-savior --session current \
+  --compress \
+  --keep-decisions \
+  --keep-code-changes</code></pre>
+  </div>
+  <div class="card">
+    <span class="card-icon">🔄</span>
+    <h3>Qué preserva al comprimir</h3>
+    <pre><code><span class="cm"># Token Savior prioriza:</span>
+✅ Decisiones arquitectónicas
+✅ Código escrito/modificado
+✅ Errores encontrados y fixes
+✅ Requirements del usuario
+✅ Estado actual del task
+
+<span class="cm"># Token Savior descarta:</span>
+❌ Exploraciones fallidas
+❌ Salidas de herramientas verbosas
+❌ Repetición de contexto
+❌ Pensamiento en voz alta
+❌ Confirmaciones intermedias
+
+<span class="cm"># Resultado típico:</span>
+<span class="cm"># 80K tokens → 25K tokens</span>
+<span class="cm"># preservando todo lo útil</span></code></pre>
+  </div>
+</div>
+
+<!-- ── CAVEMAN CLAUDE ── -->
+<div class="concept-block red">
+  <h4>📦 5 · Caveman Claude — Prompts primitivos = menos tokens (-30%)</h4>
+  <p>Filosofía radical: eliminar toda la verbosidad de los prompts e instrucciones. Instrucciones directas como "caveman": sin palabrería, sin explicaciones innecesarias. Sorprendentemente efectivo.</p>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <span class="card-icon">🗿</span>
+    <h3>El estilo Caveman</h3>
+    <pre><code><span class="cm"># ❌ Prompt verboso (180 tokens):</span>
+"Por favor, podrías ayudarme a revisar
+el archivo de configuración para ver si
+hay algún problema con las variables de
+entorno? Me gustaría entender si están
+bien configuradas para producción."
+
+<span class="cm"># ✅ Prompt Caveman (25 tokens):</span>
+"check config/env — prod ready?"
+
+<span class="cm"># ❌ CLAUDE.md verboso (500 tokens):</span>
+"You are an expert software engineer
+with 20 years of experience. Always
+think step by step..."
+
+<span class="cm"># ✅ CLAUDE.md Caveman (80 tokens):</span>
+"Stack: Node 20, Postgres 16, React 18
+Tests: vitest. Lint: biome.
+No comments. No summaries."</code></pre>
+  </div>
+  <div class="card">
+    <span class="card-icon">📝</span>
+    <h3>CLAUDE.md Caveman template</h3>
+    <pre><code><span class="cm"># Ejemplo CLAUDE.md ultra-compacto:</span>
+# Project
+[nombre] — [descripción en 1 línea]
+Stack: [tech stack]
+
+# Rules
+- [regla 1 en &lt;5 palabras]
+- [regla 2 en &lt;5 palabras]
+- No explain obvious code
+- No trailing summaries
+- Edit, don't rewrite
+
+# Commands
+test: [comando]
+lint: [comando]
+dev: [comando]
+
+<span class="cm"># Resultado: CLAUDE.md de 300 tokens</span>
+<span class="cm"># vs CLAUDE.md típico de 2000+ tokens</span>
+<span class="cm"># Se carga EN CADA TURNO → ahorro masivo</span></code></pre>
+  </div>
+</div>
+
+<div class="callout warning">
+  <div class="callout-icon">⚠️</div>
+  <p><strong>Importante:</strong> Caveman Claude funciona mejor con modelos capaces como Claude Sonnet/Opus. Con modelos pequeños, la brevedad puede generar ambigüedad. La clave es ser <em>conciso y preciso</em>, no simplemente corto.</p>
+</div>
+
+<!-- ── CLAUDE-TOKEN-EFFICIENT ── -->
+<div class="concept-block" style="border-left-color:#58a6ff">
+  <h4>📦 6 · claude-token-efficient — Formato estructurado para Claude (-35%)</h4>
+  <p>Biblioteca que reformatea automáticamente tus prompts al formato más eficiente para Claude. Elimina redundancia, usa XML tags optimizadas, y estructura el contexto según las mejores prácticas de Anthropic.</p>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <span class="card-icon">🏗️</span>
+    <h3>Setup claude-token-efficient</h3>
+    <pre><code>pip install claude-token-efficient
+
+<span class="cm"># Uso básico en Python:</span>
+from claude_efficient import optimize
+
+prompt = optimize("""
+  [tu prompt aquí]
+""", target="claude-sonnet")
+
+<span class="cm"># CLI para analizar prompts:</span>
+claude-efficient analyze prompt.txt
+<span class="cm"># Output:</span>
+<span class="cm"># Original: 850 tokens</span>
+<span class="cm"># Optimized: 520 tokens (-39%)</span>
+<span class="cm"># Suggestions:</span>
+<span class="cm">#  - Remove 3 redundant phrases</span>
+<span class="cm">#  - Consolidate 2 repetitive rules</span>
+<span class="cm">#  - Use XML tags for structure</span></code></pre>
+  </div>
+  <div class="card">
+    <span class="card-icon">🏷️</span>
+    <h3>XML Tags que Claude entiende mejor</h3>
+    <pre><code><span class="cm"># ✅ Formato eficiente para Claude:</span>
+&lt;task&gt;Refactor auth module&lt;/task&gt;
+
+&lt;context&gt;
+File: src/auth/index.ts (120 lines)
+Issue: No refresh token logic
+&lt;/context&gt;
+
+&lt;constraints&gt;
+- Keep existing interface
+- Add tests
+&lt;/constraints&gt;
+
+<span class="cm"># Claude procesa XML tags de forma</span>
+<span class="cm"># más eficiente que prosa libre.</span>
+<span class="cm"># La biblioteca convierte tu texto</span>
+<span class="cm"># a este formato automáticamente.</span></code></pre>
+  </div>
+</div>
+
+<!-- ── TOKEN-OPTIMIZER-MCP ── -->
+<div class="concept-block green">
+  <h4>📦 7 · token-optimizer-mcp — Servidor MCP que optimiza tool calls (-40%)</h4>
+  <p>Servidor MCP que actúa como proxy entre Claude Code y tus herramientas. Comprime outputs de herramientas, agrupa calls relacionadas, y cachea resultados para evitar reads redundantes.</p>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <span class="card-icon">🔌</span>
+    <h3>Setup token-optimizer-mcp</h3>
+    <pre><code><span class="cm"># GitHub: buscar "token-optimizer-mcp"</span>
+npm install -g token-optimizer-mcp
+
+<span class="cm"># .claude/settings.json:</span>
+{
+  "mcpServers": {
+    "optimizer": {
+      "command": "token-optimizer-mcp",
+      "args": [
+        "--compress-threshold", "500",
+        "--cache-ttl", "1800",
+        "--truncate-logs", "100"
+      ]
+    }
+  }
+}
+
+<span class="cm"># Envuelve todas las tool calls</span>
+<span class="cm"># automáticamente al activarlo</span></code></pre>
+  </div>
+  <div class="card">
+    <span class="card-icon">📉</span>
+    <h3>Qué optimiza en tool calls</h3>
+    <pre><code><span class="cm"># Sin optimizer:</span>
+Bash("npm test")
+→ 3000 tokens de output completo
+   incluyendo warnings, coverage,
+   y stack traces de tests pasados
+
+<span class="cm"># Con optimizer:</span>
+Bash("npm test")
+→ 180 tokens (summary)
+  "15 passed, 0 failed (2.3s)"
+  + errores relevantes si los hay
+
+<span class="cm"># También cachea:</span>
+Read("package.json") → cache hit
+<span class="cm"># No re-lee si no cambió</span>
+
+<span class="cm"># Trunca logs largos:</span>
+<span class="cm"># Solo primeros N + últimos N lines</span></code></pre>
+  </div>
+</div>
+
+<!-- ── CLAUDE-TOKEN-OPTIMIZER ── -->
+<div class="concept-block purple">
+  <h4>📦 8 · claude-token-optimizer — Middleware API para proyectos (-45%)</h4>
+  <p>Middleware que se sitúa entre tu código y la API de Anthropic. Implementa prompt caching, request deduplication, y compresión de mensajes. Ideal si construís aplicaciones sobre la API de Claude.</p>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <span class="card-icon">🔀</span>
+    <h3>Setup como middleware API</h3>
+    <pre><code">pip install claude-token-optimizer
+
+<span class="cm"># En tu código Python:</span>
+from claude_optimizer import OptimizedClient
+import anthropic
+
+client = OptimizedClient(
+    anthropic.Anthropic(),
+    cache_system_prompt=True,
+    deduplicate_tools=True,
+    compress_history=True,
+    max_history_tokens=10000
+)
+
+<span class="cm"># Úsalo igual que el cliente normal:</span>
+response = client.messages.create(
+    model="claude-sonnet-4-6",
+    messages=[{"role": "user",
+               "content": "..."}]
+)
+<span class="cm"># Caching y compresión son automáticos</span></code></pre>
+  </div>
+  <div class="card">
+    <span class="card-icon">💾</span>
+    <h3>Prompt Caching integrado</h3>
+    <pre><code"><span class="cm"># claude-token-optimizer agrega</span>
+<span class="cm"># cache_control automáticamente:</span>
+
+{
+  "role": "user",
+  "content": [
+    {
+      "type": "text",
+      "text": "Large system context...",
+      "cache_control": {
+        "type": "ephemeral"
+      }
+    }
+  ]
+}
+
+<span class="cm"># Resultado en factura Anthropic:</span>
+<span class="cm"># Input tokens: 10,000</span>
+<span class="cm"># Cache write: 10,000 (primera vez)</span>
+<span class="cm"># Cache read: 10,000 × 10 calls</span>
+<span class="cm"># Costo cache read: 10% del normal</span>
+<span class="cm"># → Ahorro: 90% en llamadas siguientes</span></code></pre>
+  </div>
+</div>
+
+<!-- ── CODE-REVIEW-GRAPH ── -->
+<div class="concept-block orange">
+  <h4>📦 9 · code-review-graph — Reviews eficientes con grafos de dependencias (-30%)</h4>
+  <p>Construye un grafo de dependencias de tu codebase y lo usa para dar a Claude solo los archivos directamente relacionados con el cambio que estás revisando. Elimina contexto irrelevante en code reviews y debugging.</p>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <span class="card-icon">🕸️</span>
+    <h3>Setup code-review-graph</h3>
+    <pre><code"><span class="cm"># GitHub: buscar "code-review-graph"</span>
+pip install code-review-graph
+
+<span class="cm"># Analizar dependencias del proyecto:</span>
+crg analyze ./src --lang typescript
+
+<span class="cm"># Antes de un review, generar contexto:</span>
+crg context --file src/auth/login.ts \
+            --depth 2 \
+            --output context.md
+
+<span class="cm"># Claude Code lee context.md en vez</span>
+<span class="cm"># de explorar el repo manualmente</span>
+
+<span class="cm"># O como MCP tool:</span>
+crg serve  <span class="cm"># expone get_context(file)</span></code></pre>
+  </div>
+  <div class="card">
+    <span class="card-icon">🗺️</span>
+    <h3>Cómo reduce el contexto</h3>
+    <pre><code"><span class="cm"># Sin code-review-graph:</span>
+<span class="cm"># Claude lee el repo entero para</span>
+<span class="cm"># entender qué afecta login.ts</span>
+<span class="cm"># → 50+ archivos → 100K tokens</span>
+
+<span class="cm"># Con code-review-graph:</span>
+<span class="cm"># login.ts importa: auth-service.ts</span>
+<span class="cm">#                   user-model.ts</span>
+<span class="cm">#                   jwt-util.ts</span>
+<span class="cm"># Es importado por: app.ts</span>
+<span class="cm"># → Solo esos 5 archivos → 8K tokens</span>
+
+<span class="cm"># El grafo se construye 1 vez</span>
+<span class="cm"># y se actualiza con --watch</span></code></pre>
+  </div>
+</div>
+
+<!-- ── TOKEN-OPTIMIZER CLI ── -->
+<div class="concept-block red">
+  <h4>📦 10 · token-optimizer (CLI) — Análisis y compresión de prompts (-25%)</h4>
+  <p>CLI de propósito general para analizar, medir y comprimir prompts. Útil para entender exactamente cuántos tokens consume cada parte de tu workflow y encontrar dónde optimizar.</p>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <span class="card-icon">🔬</span>
+    <h3>Setup token-optimizer CLI</h3>
+    <pre><code">npm install -g @anthropic/token-optimizer
+<span class="cm"># o buscar: "token-optimizer anthropic"</span>
+
+<span class="cm"># Contar tokens de un archivo:</span>
+token-count CLAUDE.md
+<span class="cm"># → 847 tokens</span>
+
+<span class="cm"># Analizar una sesión completa:</span>
+token-optimizer analyze \
+  --session ~/.claude/sessions/latest \
+  --breakdown
+
+<span class="cm"># Comprimir un prompt:</span>
+token-optimizer compress prompt.txt \
+  --target 60%  \
+  --preserve-code \
+  --output compressed.txt</code></pre>
+  </div>
+  <div class="card">
+    <span class="card-icon">📊</span>
+    <h3>Output de análisis típico</h3>
+    <pre><code"><span class="cm"># token-optimizer analyze output:</span>
+
+Session analysis: 245,392 tokens total
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+System prompt    : 12,847  (5.2%)
+CLAUDE.md        :  3,241  (1.3%)
+File reads       : 98,432 (40.1%) ← 🔴
+Tool outputs     : 76,234 (31.1%) ← 🔴
+Conversation     : 54,638 (22.3%)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Recommendations:
+→ Add Context Mode (save ~60K tokens)
+→ Compress tool outputs (save ~45K)
+→ Trim CLAUDE.md (save ~2K/turn)</code></pre>
+  </div>
+</div>
+
+<hr class="section-divider" />
+
+<!-- ════════════════════════════════════════════ -->
+<!-- 3. STACK RECOMENDADO                        -->
+<!-- ════════════════════════════════════════════ -->
+<div class="section-title">3 · Stack recomendado: combinaciones óptimas</div>
+<div class="section-subtitle">No necesitás los 10 — elegí el combo correcto según tu caso de uso</div>
+
+<div class="grid grid-3">
+
+  <div class="card">
+    <span class="card-icon">🚀</span>
+    <h3>Stack Básico (–60% tokens)</h3>
+    <p>Para empezar. Máximo impacto, mínima configuración.</p>
+    <ul style="color:var(--text-muted);font-size:.85rem;padding-left:1.1rem;line-height:2;margin-top:.75rem">
+      <li>✅ Context Mode (indexing)</li>
+      <li>✅ CLAUDE.md Caveman (formato)</li>
+      <li>✅ token-optimizer CLI (análisis)</li>
+    </ul>
+    <span class="tag tag-green">Setup: 20 min</span>
+  </div>
+
+  <div class="card">
+    <span class="card-icon">⚡</span>
+    <h3>Stack Avanzado (–80% tokens)</h3>
+    <p>Para repos grandes y sesiones largas de trabajo.</p>
+    <ul style="color:var(--text-muted);font-size:.85rem;padding-left:1.1rem;line-height:2;margin-top:.75rem">
+      <li>✅ Context Mode + RTK</li>
+      <li>✅ Token Savior (compresión)</li>
+      <li>✅ token-optimizer-mcp</li>
+      <li>✅ CLAUDE.md compacto</li>
+    </ul>
+    <span class="tag tag-blue">Setup: 1 hora</span>
+  </div>
+
+  <div class="card">
+    <span class="card-icon">🏆</span>
+    <h3>Stack Máximo (–90% tokens)</h3>
+    <p>Para proyectos enterprise o uso intensivo diario.</p>
+    <ul style="color:var(--text-muted);font-size:.85rem;padding-left:1.1rem;line-height:2;margin-top:.75rem">
+      <li>✅ Zilliz claude-context (RAG)</li>
+      <li>✅ Context Mode (FTS5)</li>
+      <li>✅ token-optimizer-mcp</li>
+      <li>✅ claude-token-optimizer (cache)</li>
+      <li>✅ code-review-graph</li>
+      <li>✅ Caveman Claude</li>
+    </ul>
+    <span class="tag tag-purple">Setup: medio día</span>
+  </div>
+
+</div>
+
+<hr class="section-divider" />
+
+<!-- ════════════════════════════════════════════ -->
+<!-- 4. MEJORES PRÁCTICAS                        -->
+<!-- ════════════════════════════════════════════ -->
+<div class="section-title">4 · Mejores prácticas de workflow</div>
+<div class="section-subtitle">Hábitos que ahorran tokens sin necesitar herramientas extra</div>
+
+<div class="grid grid-2">
+
+  <div class="card">
+    <span class="card-icon">📝</span>
+    <h3>CLAUDE.md que ahorra tokens</h3>
+    <pre><code><span class="cm"># ✅ Template compacto optimal</span>
+# &lt;project-name&gt;
+[1-line description]
+
+## Stack
+- Runtime: Node 20 / Python 3.12
+- DB: PostgreSQL 16
+- Framework: Express / FastAPI
+- Tests: Jest / pytest
+- Lint: Biome / Ruff
+
+## Dev commands
+```
+dev:   npm run dev
+test:  npm test
+lint:  npm run lint
+build: npm run build
+```
+
+## Rules
+- No comments on obvious code
+- No trailing summaries
+- Prefer Edit over Write
+- Tests required for new features</code></pre>
+  </div>
+
+  <div class="card">
+    <span class="card-icon">💬</span>
+    <h3>Prompts eficientes en sesión</h3>
+    <pre><code><span class="cm"># ❌ Desperdicia tokens:</span>
+"Podrías por favor revisar el código
+y ver si hay algún bug en la función
+de autenticación? Me gustaría que lo
+arregles si encontrás algo mal."
+
+<span class="cm"># ✅ Eficiente:</span>
+"Fix bug in auth — token doesn't
+expire after logout. src/auth/logout.ts"
+
+<span class="cm"># ❌ Pide exploración innecesaria:</span>
+"Entendé el proyecto y después..."
+
+<span class="cm"># ✅ Dá contexto directo:</span>
+"src/api/users.ts:45 — add pagination
+to getUserList(). Limit: 20, cursor-based"
+
+<span class="cm"># Regla: Claude no necesita entender</span>
+<span class="cm"># todo el proyecto para cada task</span></code></pre>
+  </div>
+
+  <div class="card">
+    <span class="card-icon">🔄</span>
+    <h3>Gestión de sesiones largas</h3>
+    <pre><code"><span class="cm"># Señales de que el contexto está sucio:</span>
+- Claude empieza a olvidar decisiones
+- Respuestas inconsistentes
+- "Como mencioné antes..." repetido
+- Rate limit warnings
+
+<span class="cm"># Estrategia de reset limpio:</span>
+1. /compact  → comprime la sesión
+2. Anotá el estado actual en un .md
+3. Nueva sesión con ese .md como contexto
+
+<span class="cm"># En vez de sesión larga:</span>
+Session 1: "Implementá el módulo auth"
+Session 2: "auth/ está completo. Ahora
+            implementá el módulo users,
+            que usa auth para verificar
+            permisos."
+
+<span class="cm"># Sesiones cortas y focalizadas</span>
+<span class="cm"># = menos tokens + mejor calidad</span></code></pre>
+  </div>
+
+  <div class="card">
+    <span class="card-icon">⚙️</span>
+    <h3>Configurar .gitignore para Claude</h3>
+    <pre><code"><span class="cm"># Evitar que Claude lea archivos grandes</span>
+<span class="cm"># innecesarios (o que los indexe)</span>
+
+<span class="cm"># .contextignore (para Context Mode):</span>
+node_modules/
+dist/
+build/
+*.lock
+*.log
+coverage/
+.next/
+__pycache__/
+*.min.js
+*.map
+
+<span class="cm"># Esto reduce el índice de Context Mode</span>
+<span class="cm"># y evita que Claude explore</span>
+<span class="cm"># carpetas con miles de archivos</span>
+
+<span class="cm"># Resultado: indexing más rápido</span>
+<span class="cm"># y búsquedas más precisas</span></code></pre>
+  </div>
+
+</div>
+
+<hr class="section-divider" />
+
+<!-- ════════════════════════════════════════════ -->
+<!-- 5. TABLA RESUMEN                            -->
+<!-- ════════════════════════════════════════════ -->
+<div class="section-title">5 · Tabla resumen comparativa</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Repo</th>
+      <th>Categoría</th>
+      <th>Ahorro estimado</th>
+      <th>Complejidad setup</th>
+      <th>Mejor para</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Context Mode</strong></td>
+      <td>Indexing</td>
+      <td style="color:var(--accent2)">60–90%</td>
+      <td>⭐ Fácil</td>
+      <td>Proyectos de cualquier tamaño</td>
+    </tr>
+    <tr>
+      <td><strong>claude-context (Zilliz)</strong></td>
+      <td>RAG semántico</td>
+      <td style="color:var(--accent2)">60–80%</td>
+      <td>⭐⭐ Medio</td>
+      <td>Repos con docs o código legacy</td>
+    </tr>
+    <tr>
+      <td><strong>RTK</strong></td>
+      <td>Hybrid retrieval</td>
+      <td style="color:var(--accent2)">50–70%</td>
+      <td>⭐⭐ Medio</td>
+      <td>Máxima precisión en búsqueda</td>
+    </tr>
+    <tr>
+      <td><strong>Token Savior</strong></td>
+      <td>Compresión</td>
+      <td style="color:var(--accent5)">30–50%</td>
+      <td>⭐ Fácil</td>
+      <td>Sesiones largas de trabajo</td>
+    </tr>
+    <tr>
+      <td><strong>Caveman Claude</strong></td>
+      <td>Formato prompt</td>
+      <td style="color:var(--accent5)">20–40%</td>
+      <td>⭐ Fácil</td>
+      <td>Todos (cambio de hábito)</td>
+    </tr>
+    <tr>
+      <td><strong>claude-token-efficient</strong></td>
+      <td>Formato XML</td>
+      <td style="color:var(--accent5)">25–40%</td>
+      <td>⭐ Fácil</td>
+      <td>Prompts complejos recurrentes</td>
+    </tr>
+    <tr>
+      <td><strong>token-optimizer-mcp</strong></td>
+      <td>MCP proxy</td>
+      <td style="color:var(--accent5)">30–50%</td>
+      <td>⭐⭐ Medio</td>
+      <td>Reducir output de tool calls</td>
+    </tr>
+    <tr>
+      <td><strong>claude-token-optimizer</strong></td>
+      <td>API middleware</td>
+      <td style="color:var(--accent2)">40–60%</td>
+      <td>⭐⭐⭐ Alto</td>
+      <td>Apps construidas sobre API Claude</td>
+    </tr>
+    <tr>
+      <td><strong>code-review-graph</strong></td>
+      <td>Dependency graph</td>
+      <td style="color:var(--accent3)">20–40%</td>
+      <td>⭐⭐ Medio</td>
+      <td>Code reviews y debugging</td>
+    </tr>
+    <tr>
+      <td><strong>token-optimizer (CLI)</strong></td>
+      <td>Análisis/medición</td>
+      <td style="color:var(--accent3)">15–30%</td>
+      <td>⭐ Fácil</td>
+      <td>Diagnosticar dónde se van los tokens</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr class="section-divider" />
+
+<!-- ════════════════════════════════════════════ -->
+<!-- 6. RECURSOS                                 -->
+<!-- ════════════════════════════════════════════ -->
+<div class="section-title">6 · Recursos</div>
+
+<div class="resource-card">
+  <div class="resource-icon">📖</div>
+  <div>
+    <h4><a href="https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching" target="_blank">Anthropic — Prompt Caching oficial</a></h4>
+    <p>Documentación oficial de prompt caching. Cache write: precio normal. Cache read: 10% del precio. Activa con <code>cache_control: {"type": "ephemeral"}</code>.</p>
+  </div>
+  <span class="resource-difficulty diff-beginner">Esencial</span>
+</div>
+
+<div class="resource-card">
+  <div class="resource-icon">🧠</div>
+  <div>
+    <h4><a href="https://www.anthropic.com/engineering/context-engineering" target="_blank">Anthropic Engineering — Context Engineering</a></h4>
+    <p>El blog oficial de Anthropic sobre Context Engineering. La filosofía detrás de todos estos optimizadores: el contexto es el nuevo prompt engineering.</p>
+  </div>
+  <span class="resource-difficulty diff-intermediate">Recomendado</span>
+</div>
+
+<div class="resource-card">
+  <div class="resource-icon">📦</div>
+  <div>
+    <h4><a href="https://github.com/zilliztech/claude-context" target="_blank">GitHub — claude-context (Zilliz)</a></h4>
+    <p>Repositorio oficial de Zilliz para RAG-based context management. Usa Milvus Lite embebido para búsqueda semántica sobre el codebase.</p>
+  </div>
+  <span class="resource-difficulty diff-intermediate">Práctica</span>
+</div>
+
+<div class="resource-card">
+  <div class="resource-icon">🔍</div>
+  <div>
+    <h4><a href="https://docs.anthropic.com/en/docs/claude-code/overview" target="_blank">Anthropic — Claude Code oficial docs</a></h4>
+    <p>Documentación oficial de Claude Code: settings.json, hooks, MCP servers, CLAUDE.md best practices, slash commands y más.</p>
+  </div>
+  <span class="resource-difficulty diff-beginner">Referencia</span>
+</div>
+
+<div class="resource-card">
+  <div class="resource-icon">🎥</div>
+  <div>
+    <h4><a href="https://www.youtube.com/results?search_query=claude+code+token+optimization" target="_blank">YouTube — Claude Code Token Optimization</a></h4>
+    <p>Tutoriales en video sobre optimización de tokens. Buscar: "claude code token optimization", "context mode claude", "reduce claude tokens".</p>
+  </div>
+  <span class="resource-difficulty diff-beginner">Visual</span>
+</div>
+
+<div class="callout">
+  <div class="callout-icon">🔎</div>
+  <p><strong>Cómo buscar los repos:</strong> Buscá en GitHub los nombres exactos de cada repo. Los repos populares en esta categoría cambian frecuentemente de nombre o se bifurcan. Filtrá por "most stars" y fijate en la fecha del último commit para asegurarte que estén activos.</p>
+</div>
+
+</main>
+
+<footer>
+  <p>⚡ System Design Guide · <a href="../index.html">Volver al inicio</a></p>
+</footer>
+
+</body>
+</html>

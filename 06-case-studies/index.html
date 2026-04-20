@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Casos de Estudio — System Design Guide</title>
+  <link rel="stylesheet" href="../styles/main.css" />
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="../index.html">⚡ System<span>Design</span></a>
+  <div class="nav-links">
+    <a href="../01-fundamentals/index.html">Fundamentos</a>
+    <a href="../02-components/index.html">Componentes</a>
+    <a href="../03-patterns/index.html">Patrones</a>
+    <a href="../04-databases/index.html">Bases de Datos</a>
+    <a href="../05-apis/index.html">APIs</a>
+    <a href="../06-case-studies/index.html" class="active">Casos Reales</a>
+    <a href="../07-infrastructure/index.html">Infraestructura</a>
+    <a href="../08-interview-prep/index.html">Entrevistas</a>
+    <a href="../09-resources/index.html">Recursos</a>
+    <a href="../10-advanced-topics/index.html">Avanzado</a>
+    <a href="../11-security/index.html">🔐 Seguridad</a>
+    <a href="../12-search/index.html">🔍 Search</a>
+    <a href="../13-soft-skills/index.html">🎭 Soft Skills</a>
+    <a href="../14-leetcode/index.html">⚡ LeetCode</a>
+    <a href="../15-ai-engineering/index.html">🤖 AI Eng</a>
+    <a href="../16-token-optimization/index.html">🪙 Tokens</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / Casos de Estudio</div>
+  <h1>🔬 Casos de Estudio</h1>
+  <p>Diseña sistemas reales desde cero. Las preguntas más frecuentes en entrevistas de Google, Meta y Amazon.</p>
+</div>
+
+<main>
+
+  <!-- URL SHORTENER -->
+  <div class="section-title">1. URL Shortener (tipo bit.ly)</div>
+  <p class="section-subtitle">La pregunta más común en entrevistas. Testa: hashing, bases de datos, caching, escala.</p>
+
+  <div class="concept-block">
+    <h4>📋 Requisitos</h4>
+    <p><strong>Funcionales:</strong> Dada una URL larga, generar URL corta. Dada una URL corta, redirigir a la original. Links expiran opcionalmente.<br/>
+    <strong>No funcionales:</strong> 100M URLs/día, reads/writes = 10:1, latencia &lt; 10ms para redirect, 99.9% disponibilidad.</p>
+  </div>
+
+  <div class="concept-block green">
+    <h4>📐 Estimaciones</h4>
+    <p>Writes: 100M / 86400 ≈ 1,160 QPS | Reads: 11,600 QPS | Storage: 500 bytes × 100M × 365 días × 5 años ≈ 900 GB</p>
+  </div>
+
+  <div class="diagram">  API Design:
+  POST /api/v1/shorten       → { longUrl, expireDate? } → { shortUrl }
+  GET  /{shortCode}          → 302 Redirect a longUrl
+  DELETE /api/v1/{shortCode} → Eliminar URL
+
+  High-Level Design:
+  ┌──────────┐   POST /shorten    ┌──────────────┐
+  │  Client  │──────────────────→│  Web Servers  │
+  │          │←── shortUrl ──────│  (stateless)  │
+  │          │                    └──────┬────────┘
+  │          │   GET /{code}             │
+  │          │──────────────────→       │
+  │          │←── 302 Redirect ──       ↓
+  └──────────┘              ┌─────────────────────┐
+                            │   Cache (Redis)      │
+                            │   shortCode → URL    │
+                            └──────────┬──────────┘
+                                       │ cache miss
+                                       ↓
+                            ┌─────────────────────┐
+                            │   Database (MySQL)   │
+                            │   id | short | long  │
+                            └─────────────────────┘</div>
+
+  <div class="section-title" style="font-size: 1.1rem; margin-top: 1.5rem;">Generación del Short Code</div>
+
+  <div class="concept-block">
+    <h4>Opción 1: Hash + truncar (MD5/SHA256)</h4>
+    <p>MD5(longUrl) → "1a79a4d60de6718e8e5b326e338ae533" → tomar primeros 7 chars → "1a79a4d". Problema: colisiones. Necesitas verificar si ya existe.</p>
+  </div>
+  <div class="concept-block green">
+    <h4>Opción 2: Base62 de un ID auto-increment ⭐ Mejor</h4>
+    <p>Genera un ID único (1, 2, 3...) en la DB. Conviértelo a Base62 (a-z, A-Z, 0-9). ID 1 → "0000001", ID 100 → "0000028". 7 chars = 62^7 = 3.5 trillion URLs.</p>
+  </div>
+
+  <pre><code><span class="kw">def</span> <span class="fn">to_base62</span>(num: <span class="fn">int</span>) -> <span class="fn">str</span>:
+    chars = <span class="str">"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"</span>
+    result = []
+    <span class="kw">while</span> num > <span class="num">0</span>:
+        result.append(chars[num % <span class="num">62</span>])
+        num //= <span class="num">62</span>
+    <span class="kw">return</span> <span class="str">""</span>.join(reversed(result)).zfill(<span class="num">7</span>)
+
+<span class="cm"># ID 11157 → "2TX" (3 chars en base62)</span>
+<span class="fn">print</span>(to_base62(<span class="num">11157</span>))  <span class="cm"># "0002TX"</span></code></pre>
+
+  <div class="concept-block purple">
+    <h4>Deep Dive: Caching Strategy</h4>
+    <p>Cache las 20% URLs más populares (80% del tráfico). TTL: 24 horas. Cache-Aside pattern. Si cache miss → DB → guardar en cache. Capacidad cache: 11,600 reads/s × 1KB × 0.2 = ~90GB de cache.</p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- TWITTER FEED -->
+  <div class="section-title">2. Twitter / Feed de Redes Sociales</div>
+  <p class="section-subtitle">La pregunta más compleja. Testa: feed generation, fanout, escala extrema.</p>
+
+  <div class="concept-block">
+    <h4>📋 Requisitos</h4>
+    <p><strong>Funcionales:</strong> Publicar tweets, seguir usuarios, ver timeline (tweets de personas que sigues), likes/retweets.<br/>
+    <strong>No funcionales:</strong> 300M usuarios, 500M tweets/día, read-heavy (100:1), latencia timeline &lt; 200ms.</p>
+  </div>
+
+  <div class="diagram">  FANOUT ON WRITE (Push model):
+  Cuando alguien tweetea → push el tweet al feed de TODOS sus seguidores
+  ┌──────────────┐   Tweet!   ┌────────────────┐
+  │  User A      │───────────→│  Tweet Service  │
+  │  (10M seguidores) │       └────────┬────────┘
+  └──────────────┘                    │
+                              Fanout a 10M feeds
+                              (puede tardar minutos)
+  ✅ Read rápido (feed pre-computado)
+  ❌ Costoso para usuarios con muchos seguidores (celebrities)
+
+  FANOUT ON READ (Pull model):
+  Cuando alguien abre el app → pull tweets de todos los que sigue
+  ✅ Simple, no hay fanout al publicar
+  ❌ Lento (mucho trabajo en el read)
+
+  SOLUCIÓN HÍBRIDA (Twitter lo usa):
+  - Usuarios normales: Fanout on write
+  - Celebrities (>1M seguidores): Fanout on read
+  - Al leer el feed: mezcla = pre-computado + celebrities en tiempo real</div>
+
+  <div class="diagram">  DATA MODEL:
+  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+  │   users      │   │   tweets     │   │   followers  │
+  │   user_id PK │   │   tweet_id   │   │   user_id    │
+  │   username   │   │   user_id FK │   │   follower_id│
+  │   created_at │   │   content    │   │   created_at │
+  └──────────────┘   │   created_at │   └──────────────┘
+                     └──────────────┘
+  ┌──────────────────────────────────┐
+  │   timeline_cache (Redis)         │
+  │   Key: "timeline:{user_id}"      │
+  │   Value: List of tweet_ids       │
+  │   (últimos 800 tweet_ids)        │
+  └──────────────────────────────────┘</div>
+
+  <hr class="section-divider" />
+
+  <!-- WHATSAPP -->
+  <div class="section-title">3. Sistema de Chat (WhatsApp)</div>
+  <p class="section-subtitle">Testa: WebSockets, mensajería en tiempo real, presencia online, storage.</p>
+
+  <div class="diagram">  ARQUITECTURA CORE:
+
+  [User A]  ←── WebSocket ──→  [Chat Server A]
+  [User B]  ←── WebSocket ──→  [Chat Server B]
+                                       │
+                              ┌────────┴────────┐
+                              │  Message Queue   │
+                              │   (Kafka)        │
+                              └────────┬────────┘
+                                       │
+                              ┌────────┴────────┐
+                              │ Message Storage  │
+                              │   (Cassandra)    │
+                              └─────────────────┘
+
+  FLUJO MENSAJE A → B:
+  1. A envía msg a Chat Server A (via WebSocket)
+  2. Chat Server A → Kafka → Chat Server B
+  3. Chat Server B entrega a B (si online)
+  4. Si B offline → push notification + mensaje en cola
+  5. B se conecta → recibe mensajes pendientes</div>
+
+  <div class="concept-block">
+    <h4>Online Presence (¿Está conectado?)</h4>
+    <p>Cada cliente envía un heartbeat cada 5 segundos. El servidor actualiza en Redis: "user:123:last_seen" = timestamp. Si el último heartbeat fue hace más de 30s → offline.</p>
+  </div>
+
+  <div class="concept-block green">
+    <h4>Message Storage</h4>
+    <p>Cassandra es ideal: append-only, writes rápidos, sharding natural por conversation_id, TTL nativo para auto-expirar mensajes. Schema: (conversation_id, message_id, sender_id, content, timestamp).</p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- RATE LIMITER -->
+  <div class="section-title">4. Rate Limiter</div>
+  <p class="section-subtitle">Proteger APIs de abuso. Pregunta favorita de Amazon.</p>
+
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>🪣 Token Bucket</h4>
+      <p>Un bucket con capacidad N tokens. Se agrega 1 token cada X segundos. Cada request consume 1 token. Si no hay tokens, rechaza. Permite burst cortos.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>⏱️ Sliding Window Counter</h4>
+      <p>Cuenta requests en la última ventana de tiempo (ej: últimos 60 segundos). Más preciso que Fixed Window, que tiene burst en el límite de ventana.</p>
+    </div>
+  </div>
+
+  <pre><code><span class="cm"># Rate limiter con Redis (Token Bucket)</span>
+<span class="kw">import</span> time
+<span class="kw">import</span> redis
+
+<span class="kw">def</span> <span class="fn">is_allowed</span>(user_id: <span class="fn">str</span>, limit: <span class="fn">int</span> = <span class="num">100</span>, window: <span class="fn">int</span> = <span class="num">3600</span>) -> <span class="fn">bool</span>:
+    key = <span class="str">f"ratelimit:{user_id}"</span>
+    pipe = redis.pipeline()
+    now = time.time()
+
+    pipe.zremrangebyscore(key, <span class="num">0</span>, now - window)  <span class="cm"># Limpiar entradas viejas</span>
+    pipe.zadd(key, {now: now})                  <span class="cm"># Agregar timestamp actual</span>
+    pipe.zcard(key)                             <span class="cm"># Contar requests en ventana</span>
+    pipe.expire(key, window)
+
+    results = pipe.execute()
+    <span class="kw">return</span> results[<span class="num">2</span>] <= limit</code></pre>
+
+  <hr class="section-divider" />
+
+  <!-- YOUTUBE / VIDEO -->
+  <div class="section-title">5. Sistema de Video Streaming (YouTube)</div>
+  <p class="section-subtitle">Testa: CDN, video processing, storage a gran escala.</p>
+
+  <div class="diagram">  VIDEO UPLOAD FLOW:
+  User → API Server → Raw Video Storage (S3)
+                   → Message Queue (Kafka)
+                   → Video Processing Workers:
+                      ● Transcoding (1080p, 720p, 480p, 360p)
+                      ● Thumbnail generation
+                      ● Metadata extraction
+                   → CDN distribution
+
+  VIDEO STREAMING FLOW:
+  User → API Server → CDN Edge Node (nearest)
+                                 │ (cache miss)
+                                 ↓
+                         Origin Storage (S3)
+
+  ADAPTIVE BITRATE STREAMING:
+  Player detecta el ancho de banda del usuario:
+  ● 4G rápido → 1080p
+  ● 4G normal → 720p
+  ● 3G → 480p
+  ● Conexión lenta → 360p
+  (cambia automáticamente durante la reproducción)</div>
+
+  <div class="callout">
+    <div class="callout-icon">📊</div>
+    <p><strong>Números reales de YouTube:</strong> 500 horas de video subidas por minuto. 1 hora de video = ~1.5 GB en raw. Después de transcoding a múltiples resoluciones = ~10 GB por video. CDN es CRÍTICO — sin él, la red no aguantaría.</p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- NAVIGACIÓN -->
+  <div class="section-title">Más Casos de Estudio</div>
+  <div class="grid grid-4">
+    <div class="card">
+      <span class="card-icon">🚗</span>
+      <h3>Uber / Lyft</h3>
+      <p>Geo-matching en real time, surge pricing, maps.</p>
+      <span class="tag tag-orange">Geolocation</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🎵</span>
+      <h3>Spotify</h3>
+      <p>Music streaming, recomendaciones, offline mode.</p>
+      <span class="tag tag-green">Streaming</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🛒</span>
+      <h3>Amazon</h3>
+      <p>E-commerce, inventory, checkout, recomendaciones.</p>
+      <span class="tag tag-blue">E-commerce</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🔍</span>
+      <h3>Google Search</h3>
+      <p>Web crawling, indexing, ranking, query processing.</p>
+      <span class="tag tag-purple">Search</span>
+    </div>
+  </div>
+
+  <div style="margin-top: 2rem;">
+    <a class="card" href="../08-interview-prep/index.html">
+      <span class="card-icon">🎯</span>
+      <h3>Practica el Framework de Entrevista →</h3>
+      <p>Aprende cómo presentar estos diseños correctamente en una entrevista de 45 minutos.</p>
+    </a>
+  </div>
+
+</main>
+
+<footer>
+  <p>System Design Guide · <a href="../index.html">← Volver al inicio</a></p>
+</footer>
+
+</body>
+</html>

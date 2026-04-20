@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>System Design Guide — Complete Reference</title>
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="index.html">⚡ System<span>Design</span></a>
+  <div class="nav-links">
+    <a href="01-fundamentals/index.html">Fundamentos</a>
+    <a href="02-components/index.html">Componentes</a>
+    <a href="03-patterns/index.html">Patrones</a>
+    <a href="04-databases/index.html">Bases de Datos</a>
+    <a href="05-apis/index.html">APIs</a>
+    <a href="06-case-studies/index.html">Casos Reales</a>
+    <a href="07-infrastructure/index.html">Infraestructura</a>
+    <a href="08-interview-prep/index.html">Entrevistas</a>
+    <a href="09-resources/index.html">Recursos</a>
+    <a href="10-advanced-topics/index.html">Avanzado</a>
+    <a href="11-security/index.html">🔐 Seguridad</a>
+    <a href="12-search/index.html">🔍 Search</a>
+    <a href="13-soft-skills/index.html">🎭 Soft Skills</a>
+    <a href="14-leetcode/index.html">⚡ LeetCode</a>
+    <a href="15-ai-engineering/index.html">🤖 AI Eng</a>
+    <a href="16-token-optimization/index.html">🪙 Tokens</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>System Design &amp;<br/>Architecture Guide</h1>
+  <p>La guía más completa en español para dominar el diseño de sistemas, preparar entrevistas técnicas y construir software escalable.</p>
+  <div class="hero-badges">
+    <span class="badge">📚 16 Módulos</span>
+    <span class="badge">🎯 Interview Ready</span>
+    <span class="badge">🏗️ Patrones &amp; Arquitectura</span>
+    <span class="badge">🌐 Mejores Recursos</span>
+    <span class="badge">💡 Casos Reales</span>
+  </div>
+</div>
+
+<main>
+
+  <!-- MÓDULOS -->
+  <div class="section-title">Módulos</div>
+  <p class="section-subtitle">Recorrido completo desde fundamentos hasta preparación para entrevistas en empresas top.</p>
+
+  <div class="grid grid-2">
+
+    <a class="card" href="01-fundamentals/index.html">
+      <span class="card-icon">🧱</span>
+      <h3>01 · Fundamentos</h3>
+      <p>Escalabilidad, disponibilidad, latencia, throughput, CAP Theorem, consistencia eventual y los pilares de cualquier sistema distribuido.</p>
+      <span class="tag tag-blue">Esencial</span>
+    </a>
+
+    <a class="card" href="02-components/index.html">
+      <span class="card-icon">⚙️</span>
+      <h3>02 · Componentes Core</h3>
+      <p>Load Balancers, Caching (Redis/CDN), Message Queues (Kafka/RabbitMQ), API Gateways y los bloques básicos de todo sistema.</p>
+      <span class="tag tag-green">Infraestructura</span>
+    </a>
+
+    <a class="card" href="03-patterns/index.html">
+      <span class="card-icon">🏛️</span>
+      <h3>03 · Patrones de Arquitectura</h3>
+      <p>Monolito vs Microservicios, Event-Driven, CQRS, Event Sourcing, Saga Pattern, BFF y los patrones más usados en producción.</p>
+      <span class="tag tag-purple">Arquitectura</span>
+    </a>
+
+    <a class="card" href="04-databases/index.html">
+      <span class="card-icon">🗄️</span>
+      <h3>04 · Bases de Datos</h3>
+      <p>SQL vs NoSQL, sharding, replicación, indexing, ACID vs BASE, y cómo elegir la base de datos correcta según el caso.</p>
+      <span class="tag tag-orange">Data</span>
+    </a>
+
+    <a class="card" href="05-apis/index.html">
+      <span class="card-icon">🔌</span>
+      <h3>05 · Diseño de APIs</h3>
+      <p>REST, GraphQL, gRPC, WebSockets, rate limiting, autenticación, versionado y mejores prácticas para APIs a escala.</p>
+      <span class="tag tag-blue">APIs</span>
+    </a>
+
+    <a class="card" href="06-case-studies/index.html">
+      <span class="card-icon">🔬</span>
+      <h3>06 · Casos de Estudio</h3>
+      <p>Diseña desde cero: URL Shortener, Twitter Feed, WhatsApp, YouTube, Uber, Netflix y más sistemas reales.</p>
+      <span class="tag tag-red">Práctica</span>
+    </a>
+
+    <a class="card" href="07-infrastructure/index.html">
+      <span class="card-icon">☁️</span>
+      <h3>07 · Infraestructura &amp; DevOps</h3>
+      <p>Docker, Kubernetes, CI/CD, monitoring, logging, alertas, Cloud (AWS/GCP/Azure) y resiliencia en producción.</p>
+      <span class="tag tag-green">DevOps</span>
+    </a>
+
+    <a class="card" href="08-interview-prep/index.html">
+      <span class="card-icon">🎯</span>
+      <h3>08 · Prep Entrevistas</h3>
+      <p>Framework de 7 pasos, preguntas reales de Google, Meta, Amazon. Cómo estructurar la respuesta y qué buscan los interviewers.</p>
+      <span class="tag tag-red">Entrevistas</span>
+    </a>
+
+    <a class="card" href="09-resources/index.html">
+      <span class="card-icon">📖</span>
+      <h3>09 · Recursos</h3>
+      <p>Los mejores libros, cursos, canales de YouTube, repos de GitHub y plataformas para seguir aprendiendo.</p>
+      <span class="tag tag-purple">Recursos</span>
+    </a>
+
+    <a class="card" href="10-advanced-topics/index.html">
+      <span class="card-icon">🚀</span>
+      <h3>10 · Temas Avanzados</h3>
+      <p>Alex Xu Vol. 1 &amp; 2 completo: Unique ID Generator, Key-Value Store, Payment System, Stock Exchange, Proximity Service, Ad Click Aggregation. ByteByteGo top concepts.</p>
+      <span class="tag tag-red">Staff Engineer Level</span>
+    </a>
+
+    <a class="card" href="11-security/index.html">
+      <span class="card-icon">🔐</span>
+      <h3>11 · Seguridad</h3>
+      <p>OAuth 2.0, JWT vs Sessions, cifrado en tránsito y en reposo, RBAC/ABAC, Zero Trust, OWASP Top 10, secrets management y seguridad en microservicios.</p>
+      <span class="tag tag-red">Senior Level</span>
+    </a>
+
+    <a class="card" href="12-search/index.html">
+      <span class="card-icon">🔍</span>
+      <h3>12 · Search &amp; Full-Text Search</h3>
+      <p>Inverted index, BM25, Elasticsearch a escala, type-ahead autocomplete, geo search (geohashing, quadtree), vector search semántico y pipeline de indexación.</p>
+      <span class="tag tag-purple">Senior Level</span>
+    </a>
+
+    <a class="card" href="13-soft-skills/index.html">
+      <span class="card-icon">🎭</span>
+      <h3>13 · Soft Skills &amp; Job Search</h3>
+      <p>Cómo conseguir entrevistas, STAR framework, 8 preguntas clásicas de behavioral, salary negotiation, cultura americana y checklist pre-entrevista. Basado en Silver.dev.</p>
+      <span class="tag tag-green">Interview Ready</span>
+    </a>
+
+    <a class="card" href="14-leetcode/index.html">
+      <span class="card-icon">⚡</span>
+      <h3>14 · LeetCode Speed Prep</h3>
+      <p>Los 20 problemas Easy más frecuentes con soluciones en JS, 10 patrones memorizables, plan de 7 días y simulacros. Meta: resolver todos en menos de 40 minutos.</p>
+      <span class="tag tag-blue">Coding Interview</span>
+    </a>
+
+    <a class="card" href="15-ai-engineering/index.html">
+      <span class="card-icon">🤖</span>
+      <h3>15 · AI Engineering</h3>
+      <p>Agentes, LLMs, Context Engineering, RAG, MCP, OpenAI, Claude Code, Cursor, Vector DBs, Evals y Observabilidad. Todo para ser Senior AI Engineer en 2025–2026.</p>
+      <span class="tag tag-purple">AI Engineering</span>
+    </a>
+
+    <a class="card" href="16-token-optimization/index.html">
+      <span class="card-icon">🪙</span>
+      <h3>16 · Token Optimization</h3>
+      <p>10 repos de GitHub que reducen el consumo de tokens en Claude Code hasta un 90%. Context Mode, Zilliz RAG, Token Savior, Caveman Claude y más. Guía de setup e implementación.</p>
+      <span class="tag tag-orange">Claude Code</span>
+    </a>
+
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- QUICK REFERENCE -->
+  <div class="section-title">Quick Reference — Conceptos Clave</div>
+  <p class="section-subtitle">Los conceptos que el 80% de las entrevistas evalúan.</p>
+
+  <div class="grid grid-4">
+    <div class="card">
+      <span class="card-icon">⚖️</span>
+      <h3>CAP Theorem</h3>
+      <p>Un sistema distribuido solo puede garantizar 2 de 3: Consistency, Availability, Partition Tolerance.</p>
+    </div>
+    <div class="card">
+      <span class="card-icon">🔄</span>
+      <h3>Consistent Hashing</h3>
+      <p>Distribuir carga minimizando redistribución cuando se agregan/quitan servidores.</p>
+    </div>
+    <div class="card">
+      <span class="card-icon">📦</span>
+      <h3>Sharding</h3>
+      <p>Particionar datos horizontalmente entre múltiples bases de datos para escalar.</p>
+    </div>
+    <div class="card">
+      <span class="card-icon">🔁</span>
+      <h3>Replication</h3>
+      <p>Copiar datos entre nodos para alta disponibilidad. Leader/follower o multi-leader.</p>
+    </div>
+    <div class="card">
+      <span class="card-icon">⚡</span>
+      <h3>Caching</h3>
+      <p>Almacenar respuestas frecuentes en memoria (Redis) para reducir latencia y carga en DB.</p>
+    </div>
+    <div class="card">
+      <span class="card-icon">🌊</span>
+      <h3>Rate Limiting</h3>
+      <p>Limitar peticiones por usuario/IP para proteger el sistema. Token bucket, sliding window.</p>
+    </div>
+    <div class="card">
+      <span class="card-icon">🔌</span>
+      <h3>Circuit Breaker</h3>
+      <p>Patrón que evita llamadas a servicios caídos, retornando error inmediato (fail fast).</p>
+    </div>
+    <div class="card">
+      <span class="card-icon">📡</span>
+      <h3>Message Queue</h3>
+      <p>Desacoplar productores y consumidores. Kafka para streams, RabbitMQ para tasks.</p>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- FRAMEWORK ENTREVISTA -->
+  <div class="section-title">Framework — Cómo responder en una entrevista</div>
+  <p class="section-subtitle">El framework de 7 pasos que usan los ingenieros de FAANG.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>Clarificar Requisitos</h4>
+        <p>Nunca asumas. Pregunta: ¿cuántos usuarios? ¿funcionalidades core? ¿latencia aceptable? Define scope.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>Estimaciones de Escala</h4>
+        <p>Calcula QPS (queries per second), storage necesario, bandwidth. Estos números guían tus decisiones.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>Definir APIs</h4>
+        <p>¿Qué endpoints expone el sistema? Define los contratos antes de hablar de implementación.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h4>Modelo de Datos</h4>
+        <p>¿Qué entidades existen? ¿Relaciones? ¿SQL o NoSQL? ¿Cómo se almacenan?</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <h4>Diseño de Alto Nivel</h4>
+        <p>Dibuja el diagrama general: clientes, servidores, bases de datos, caches, queues. El flujo principal.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-content">
+        <h4>Deep Dive en Componentes</h4>
+        <p>El interviewer elegirá 1-2 componentes para profundizar. Ten listos los trade-offs de cada decisión.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">7</div>
+      <div class="step-content">
+        <h4>Identificar Bottlenecks</h4>
+        <p>¿Qué falla primero bajo carga? SPOF (single point of failure), hot spots, cuellos de botella.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- TOP EMPRESAS -->
+  <div class="section-title">Empresas Top &amp; Sus Enfasis</div>
+  <p class="section-subtitle">Qué busca cada empresa en sus entrevistas de system design.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Empresa</th>
+        <th>Foco Principal</th>
+        <th>Preguntas Comunes</th>
+        <th>Duración</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Google</strong></td>
+        <td>Escalabilidad, distributed systems</td>
+        <td>Google Search, Google Drive, YouTube</td>
+        <td>45 min</td>
+      </tr>
+      <tr>
+        <td><strong>Meta</strong></td>
+        <td>Productos propios, feed systems</td>
+        <td>Facebook Feed, Instagram, WhatsApp</td>
+        <td>45 min</td>
+      </tr>
+      <tr>
+        <td><strong>Amazon</strong></td>
+        <td>Leadership principles + design</td>
+        <td>Amazon Locker, e-commerce, AWS services</td>
+        <td>45 min</td>
+      </tr>
+      <tr>
+        <td><strong>Netflix</strong></td>
+        <td>Streaming, recomendaciones</td>
+        <td>Video streaming, recommendation engine</td>
+        <td>60 min</td>
+      </tr>
+      <tr>
+        <td><strong>Uber/Lyft</strong></td>
+        <td>Real-time, geolocation</td>
+        <td>Ride matching, surge pricing, maps</td>
+        <td>45 min</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <hr class="section-divider" />
+
+  <!-- TOP RECURSOS -->
+  <div class="section-title">Top Recursos para Empezar</div>
+  <p class="section-subtitle">Los recursos más recomendados por ingenieros de FAANG.</p>
+
+  <div class="grid grid-3">
+    <div class="card">
+      <span class="card-icon">📗</span>
+      <h3>Designing Data-Intensive Applications</h3>
+      <p>Martin Kleppmann. El libro más recomendado por ingenieros senior. Cubre desde fundamentos hasta sistemas distribuidos avanzados.</p>
+      <span class="tag tag-orange">Libro · Avanzado</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">📘</span>
+      <h3>System Design Interview — Alex Xu</h3>
+      <p>El mejor libro específico para entrevistas. Framework paso a paso con 16 casos de estudio reales.</p>
+      <span class="tag tag-green">Libro · Principiante</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">⭐</span>
+      <h3>System Design Primer</h3>
+      <p>Repo de GitHub con 233k+ estrellas. Recurso gratuito y completo. El punto de partida ideal.</p>
+      <span class="tag tag-blue">Gratis · GitHub</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">📹</span>
+      <h3>Gaurav Sen — YouTube</h3>
+      <p>Ex-Google. Los mejores videos explicando conceptos de system design desde cero. Ideal para empezar.</p>
+      <span class="tag tag-red">Gratis · YouTube</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🎨</span>
+      <h3>ByteByteGo</h3>
+      <p>Plataforma de Alex Xu con guías visuales increíbles. Newsletter gratuito + cursos pagos de alta calidad.</p>
+      <span class="tag tag-purple">Gratis/Pago</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🎓</span>
+      <h3>Grokking System Design</h3>
+      <p>El curso más recomendado para entrevistas. Disponible en Educative.io y DesignGurus.io.</p>
+      <span class="tag tag-orange">Pago · Curso</span>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <p>System Design Guide · Construido para dominar las entrevistas técnicas y la arquitectura de software.</p>
+  <p style="margin-top:0.5rem">
+    <a href="09-resources/index.html">Ver todos los recursos →</a>
+  </p>
+</footer>
+
+</body>
+</html>

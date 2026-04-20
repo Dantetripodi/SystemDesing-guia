@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recursos — System Design Guide</title>
+  <link rel="stylesheet" href="../styles/main.css" />
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="../index.html">⚡ System<span>Design</span></a>
+  <div class="nav-links">
+    <a href="../01-fundamentals/index.html">Fundamentos</a>
+    <a href="../02-components/index.html">Componentes</a>
+    <a href="../03-patterns/index.html">Patrones</a>
+    <a href="../04-databases/index.html">Bases de Datos</a>
+    <a href="../05-apis/index.html">APIs</a>
+    <a href="../06-case-studies/index.html">Casos Reales</a>
+    <a href="../07-infrastructure/index.html">Infraestructura</a>
+    <a href="../08-interview-prep/index.html">Entrevistas</a>
+    <a href="../09-resources/index.html" class="active">Recursos</a>
+    <a href="../10-advanced-topics/index.html">Avanzado</a>
+    <a href="../11-security/index.html">🔐 Seguridad</a>
+    <a href="../12-search/index.html">🔍 Search</a>
+    <a href="../13-soft-skills/index.html">🎭 Soft Skills</a>
+    <a href="../14-leetcode/index.html">⚡ LeetCode</a>
+    <a href="../15-ai-engineering/index.html">🤖 AI Eng</a>
+    <a href="../16-token-optimization/index.html">🪙 Tokens</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / Recursos</div>
+  <h1>📖 Recursos Curados</h1>
+  <p>Los mejores libros, canales de YouTube, repos de GitHub y plataformas para dominar system design.</p>
+</div>
+
+<main>
+
+  <!-- LIBROS -->
+  <div class="section-title">📚 Libros Esenciales</div>
+  <p class="section-subtitle">Ordenados por prioridad. Empieza con los primeros si eres nuevo.</p>
+
+  <div class="resource-card">
+    <div class="resource-icon">📗</div>
+    <div>
+      <h4>
+        <a href="https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/" target="_blank">
+          Designing Data-Intensive Applications
+        </a>
+      </h4>
+      <p>Martin Kleppmann · O'Reilly, 2017<br/>
+      El libro más recomendado por ingenieros senior. Cubre desde fundamentos de bases de datos hasta sistemas distribuidos avanzados: replicación, sharding, transacciones distribuidas, consistencia. No es específico de entrevistas sino de ingeniería real. <strong>Lectura obligatoria para cualquier ingeniero senior.</strong></p>
+    </div>
+    <div class="resource-difficulty diff-advanced">Avanzado</div>
+  </div>
+
+  <div class="resource-card">
+    <div class="resource-icon">📘</div>
+    <div>
+      <h4>
+        <a href="https://www.amazon.com/System-Design-Interview-insiders-Second/dp/B08CMF2CQF" target="_blank">
+          System Design Interview — An Insider's Guide Vol 1
+        </a>
+      </h4>
+      <p>Alex Xu · ByteByteGo, 2020<br/>
+      El mejor libro específico para entrevistas. Framework paso a paso con 16 casos de estudio: URL shortener, rate limiter, consistent hashing, key-value store, unique ID generator, notification system, chat system, search autocomplete, YouTube, Google Drive. Muy visual y claro.</p>
+    </div>
+    <div class="resource-difficulty diff-beginner">Principiante</div>
+  </div>
+
+  <div class="resource-card">
+    <div class="resource-icon">📙</div>
+    <div>
+      <h4>
+        <a href="https://www.amazon.com/System-Design-Interview-Insiders-Guide/dp/1736049119" target="_blank">
+          System Design Interview — Vol 2
+        </a>
+      </h4>
+      <p>Alex Xu &amp; Sahn Lam · ByteByteGo, 2022<br/>
+      Continuación del Vol 1. Casos más complejos: nearby friends, Google Maps, distributed message queue, metrics monitoring, ad click event aggregation, hotel reservation, stock exchange. Para candidatos a Staff/Senior.</p>
+    </div>
+    <div class="resource-difficulty diff-intermediate">Intermedio</div>
+  </div>
+
+  <div class="resource-card">
+    <div class="resource-icon">📕</div>
+    <div>
+      <h4>
+        <a href="https://www.oreilly.com/library/view/fundamentals-of-software/9781492043447/" target="_blank">
+          Fundamentals of Software Architecture
+        </a>
+      </h4>
+      <p>Mark Richards &amp; Neal Ford · O'Reilly, 2020<br/>
+      El libro definitivo sobre arquitectura de software. Cubre todos los estilos arquitecturales: microservicios, event-driven, space-based, pipeline, microkernel. Ideal para architects y senior engineers que quieren ir más allá de las entrevistas.</p>
+    </div>
+    <div class="resource-difficulty diff-intermediate">Intermedio</div>
+  </div>
+
+  <div class="resource-card">
+    <div class="resource-icon">📔</div>
+    <div>
+      <h4>
+        <a href="https://www.oreilly.com/library/view/software-architecture-the/9781492086888/" target="_blank">
+          Software Architecture: The Hard Parts
+        </a>
+      </h4>
+      <p>Neal Ford, Mark Richards, et al. · O'Reilly, 2021<br/>
+      Para quienes ya tienen bases sólidas. Trata los temas más difíciles: coupling vs cohesion, data ownership en microservicios, distributed transactions, cuando migrar de monolito. Usa casos narrativos para explicar las decisiones.</p>
+    </div>
+    <div class="resource-difficulty diff-advanced">Avanzado</div>
+  </div>
+
+  <div class="resource-card">
+    <div class="resource-icon">📒</div>
+    <div>
+      <h4>
+        <a href="https://www.educative.io/courses/grokking-the-system-design-interview" target="_blank">
+          Grokking the System Design Interview
+        </a>
+      </h4>
+      <p>Fahim ul Haq · Educative.io / DesignGurus.io<br/>
+      El curso más recomendado para entrevistas. Sistemático y estructurado. Cubre 22 casos de estudio. Disponible también en versión libro. Actualizado a 2026. <strong>El más popular en la comunidad.</strong></p>
+    </div>
+    <div class="resource-difficulty diff-beginner">Principiante</div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- YOUTUBE -->
+  <div class="section-title">📹 Canales de YouTube</div>
+  <p class="section-subtitle">Todos gratuitos. El mejor punto de entrada para aprender visualmente.</p>
+
+  <div class="resource-card">
+    <div class="resource-icon">🎯</div>
+    <div>
+      <h4>
+        <a href="https://www.youtube.com/channel/UCRPMAqdtSgd0Ipeef7iFsKw" target="_blank">
+          Gaurav Sen
+        </a>
+      </h4>
+      <p>Ex-Google Engineer · 1.3M+ suscriptores<br/>
+      El mejor canal para comenzar. Explicaciones claras de conceptos difíciles: consistent hashing, database sharding, CAP theorem, load balancing, caching. Diseños de sistemas reales: WhatsApp, Instagram, Uber, Dropbox. <strong>Empieza aquí.</strong></p>
+    </div>
+    <div class="resource-difficulty diff-beginner">Gratis</div>
+  </div>
+
+  <div class="resource-card">
+    <div class="resource-icon">🎨</div>
+    <div>
+      <h4>
+        <a href="https://www.youtube.com/@ByteByteGo" target="_blank">
+          ByteByteGo (Alex Xu)
+        </a>
+      </h4>
+      <p>1M+ suscriptores<br/>
+      Videos cortos y muy visuales (5-15 min). Explican cómo funcionan sistemas reales: cómo funciona HTTPS, cómo escala Twitter, qué es una API Gateway, etc. Ideal para reforzar conceptos visualmente. El canal es gratis; los cursos son pagos.</p>
+    </div>
+    <div class="resource-difficulty diff-beginner">Gratis</div>
+  </div>
+
+  <div class="resource-card">
+    <div class="resource-icon">🖥️</div>
+    <div>
+      <h4>
+        <a href="https://www.youtube.com/c/TechDummiesNarendraL" target="_blank">
+          Tech Dummies (Narendra L)
+        </a>
+      </h4>
+      <p>500k+ suscriptores<br/>
+      Estilo whiteboard. Muy didáctico. Deep dives en preguntas de entrevistas con el formato completo de 45 minutos. Cubre: Uber, Lyft, BookMyShow, Parking Lot, Twitter, Netflix y más. Bueno para ver cómo se estructura la respuesta completa.</p>
+    </div>
+    <div class="resource-difficulty diff-intermediate">Gratis</div>
+  </div>
+
+  <div class="resource-card">
+    <div class="resource-icon">⚡</div>
+    <div>
+      <h4>
+        <a href="https://www.youtube.com/@hnasr" target="_blank">
+          Hussein Nasser
+        </a>
+      </h4>
+      <p>300k+ suscriptores<br/>
+      Profundidad técnica real. No es "entrevista prep" sino ingeniería real: cómo funciona TCP, PostgreSQL internamente, HTTP/2 vs HTTP/3, WebSockets a fondo. Para quien quiere entender cómo funcionan los componentes de verdad.</p>
+    </div>
+    <div class="resource-difficulty diff-advanced">Gratis · Técnico</div>
+  </div>
+
+  <div class="resource-card">
+    <div class="resource-icon">🎓</div>
+    <div>
+      <h4>
+        <a href="https://www.youtube.com/@codeKarle" target="_blank">
+          codeKarle
+        </a>
+      </h4>
+      <p>200k+ suscriptores<br/>
+      Videos completos de system design interviews. Formato de entrevista real: clarificación, estimaciones, diagrama, deep dive. Cubre: Swiggy, BookMyShow, Hotstar, WhatsApp, Instagram y más casos de la industria india (muy relevantes para empresas que tienen presencia en India).</p>
+    </div>
+    <div class="resource-difficulty diff-intermediate">Gratis</div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- GITHUB REPOS -->
+  <div class="section-title">⭐ GitHub Repositories</div>
+  <p class="section-subtitle">Los repos más valiosos para aprender y practicar. Todos gratuitos.</p>
+
+  <div class="resource-card">
+    <div class="resource-icon">🌟</div>
+    <div>
+      <h4>
+        <a href="https://github.com/donnemartin/system-design-primer" target="_blank">
+          system-design-primer — donnemartin
+        </a>
+      </h4>
+      <p>233,000+ ⭐ · El repo más estrellado de preparación técnica en GitHub<br/>
+      Recurso gratuito y completo. Cubre todos los temas fundamentales con diagramas ASCII, ejemplos, trade-offs. Incluye flashcards de Anki para spaced repetition. Disponible en múltiples idiomas. <strong>El punto de partida ideal y gratuito.</strong></p>
+    </div>
+    <div class="resource-difficulty diff-beginner">Gratis</div>
+  </div>
+
+  <div class="resource-card">
+    <div class="resource-icon">🔷</div>
+    <div>
+      <h4>
+        <a href="https://github.com/ByteByteGoHq/system-design-101" target="_blank">
+          system-design-101 — ByteByteGoHq
+        </a>
+      </h4>
+      <p>65,000+ ⭐ · ByteByteGo<br/>
+      Explica sistemas complejos con visuales simples. Cubre: protocolos de red, REST vs GraphQL vs gRPC, caching, CI/CD, cloud services, seguridad y más. Excelente como referencia visual rápida.</p>
+    </div>
+    <div class="resource-difficulty diff-beginner">Gratis</div>
+  </div>
+
+  <div class="resource-card">
+    <div class="resource-icon">💎</div>
+    <div>
+      <h4>
+        <a href="https://github.com/ashishps1/awesome-system-design-resources" target="_blank">
+          awesome-system-design-resources — ashishps1
+        </a>
+      </h4>
+      <p>18,000+ ⭐<br/>
+      Curación de los mejores recursos gratuitos de system design: artículos de ingeniería de Netflix, Uber, Airbnb, Discord. Papers académicos. Videos. Casos de estudio reales de empresas top. Actualizado regularmente.</p>
+    </div>
+    <div class="resource-difficulty diff-intermediate">Gratis</div>
+  </div>
+
+  <div class="resource-card">
+    <div class="resource-icon">🏆</div>
+    <div>
+      <h4>
+        <a href="https://github.com/InterviewReady/system-design-resources" target="_blank">
+          system-design-resources — InterviewReady
+        </a>
+      </h4>
+      <p>16,000+ ⭐ · Gaurav Sen<br/>
+      Recursos avanzados: papers de sistemas reales, video lectures de empresas, casos de uso de Kafka, Kubernetes, distributed systems. Para quien quiere ir más allá de las entrevistas y entender sistemas de producción reales.</p>
+    </div>
+    <div class="resource-difficulty diff-advanced">Gratis · Avanzado</div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- PLATAFORMAS -->
+  <div class="section-title">🎓 Plataformas y Cursos</div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <span class="card-icon">💰</span>
+      <h3>Pagos (Alta Calidad)</h3>
+      <div class="resource-card" style="margin-top: 0.75rem; padding: 0.75rem;">
+        <div>
+          <h4><a href="https://bytebytego.com" target="_blank">ByteByteGo</a></h4>
+          <p style="font-size:0.82rem">Alex Xu · Los 8 libros + material exclusivo + newsletter semanal gratis. ~$50/mes.</p>
+        </div>
+      </div>
+      <div class="resource-card" style="padding: 0.75rem;">
+        <div>
+          <h4><a href="https://www.designgurus.io" target="_blank">DesignGurus.io</a></h4>
+          <p style="font-size:0.82rem">Grokking courses. El #1 para entrevistas. ~$79/mes o por curso.</p>
+        </div>
+      </div>
+      <div class="resource-card" style="padding: 0.75rem;">
+        <div>
+          <h4><a href="https://interviewready.io" target="_blank">InterviewReady</a></h4>
+          <p style="font-size:0.82rem">Gaurav Sen. System Design + AI Engineering courses. Muy técnico.</p>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <span class="card-icon">🆓</span>
+      <h3>Gratuitos</h3>
+      <div class="resource-card" style="margin-top: 0.75rem; padding: 0.75rem;">
+        <div>
+          <h4><a href="https://github.com/donnemartin/system-design-primer" target="_blank">System Design Primer</a></h4>
+          <p style="font-size:0.82rem">GitHub repo con 233k+ ⭐. El mejor recurso gratuito disponible.</p>
+        </div>
+      </div>
+      <div class="resource-card" style="padding: 0.75rem;">
+        <div>
+          <h4><a href="https://www.pramp.com" target="_blank">Pramp</a></h4>
+          <p style="font-size:0.82rem">Mock interviews peer-to-peer gratuitas. Practica el framework en tiempo real.</p>
+        </div>
+      </div>
+      <div class="resource-card" style="padding: 0.75rem;">
+        <div>
+          <h4><a href="https://www.coursera.org/courses?query=system+design" target="_blank">Coursera</a></h4>
+          <p style="font-size:0.82rem">Preview gratis de primeros módulos. Certificados con subscripción.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- INGENIERÍA DE EMPRESAS REALES -->
+  <div class="section-title">🏢 Engineering Blogs — Aprender de Empresas Reales</div>
+  <p class="section-subtitle">Cómo resolvieron problemas reales los mejores equipos de ingeniería del mundo.</p>
+
+  <div class="grid grid-3">
+    <div class="card">
+      <span class="card-icon">🎬</span>
+      <h3>Netflix Tech Blog</h3>
+      <p>Cómo escalan el streaming, Chaos Engineering, microservicios, cache global. Fascinante.</p>
+      <a href="https://netflixtechblog.com/" target="_blank"><span class="tag tag-red">netflixtechblog.com →</span></a>
+    </div>
+    <div class="card">
+      <span class="card-icon">🚗</span>
+      <h3>Uber Engineering</h3>
+      <p>Geo-indexing, real-time data, CQRS en producción, cómo escalan a nivel global.</p>
+      <a href="https://www.uber.com/blog/engineering/" target="_blank"><span class="tag tag-orange">uber.com/blog/engineering →</span></a>
+    </div>
+    <div class="card">
+      <span class="card-icon">🏠</span>
+      <h3>Airbnb Engineering</h3>
+      <p>Migración de monolito a microservicios, data engineering, experimentation platform.</p>
+      <a href="https://medium.com/airbnb-engineering" target="_blank"><span class="tag tag-red">medium.com/airbnb-engineering →</span></a>
+    </div>
+    <div class="card">
+      <span class="card-icon">💬</span>
+      <h3>Discord Engineering</h3>
+      <p>Cómo manejan millones de conexiones WebSocket simultáneas, el salto de Python a Rust.</p>
+      <a href="https://discord.com/blog/engineering" target="_blank"><span class="tag tag-purple">discord.com/blog/engineering →</span></a>
+    </div>
+    <div class="card">
+      <span class="card-icon">🔷</span>
+      <h3>Meta Engineering</h3>
+      <p>React, GraphQL, Cassandra — Meta creó muchas tecnologías que usamos hoy.</p>
+      <a href="https://engineering.fb.com/" target="_blank"><span class="tag tag-blue">engineering.fb.com →</span></a>
+    </div>
+    <div class="card">
+      <span class="card-icon">🔴</span>
+      <h3>Slack Engineering</h3>
+      <p>Real-time messaging en escala, WebSockets, arquitectura de canales y workspaces.</p>
+      <a href="https://slack.engineering/" target="_blank"><span class="tag tag-red">slack.engineering →</span></a>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- CAMINO DE APRENDIZAJE -->
+  <div class="section-title">🗺️ Camino de Aprendizaje Recomendado</div>
+
+  <div class="concept-block">
+    <h4>🌱 Principiante (0-3 meses)</h4>
+    <p>1. Ver todos los videos de Gaurav Sen (YouTube, gratis) · 2. Leer System Design Primer (GitHub, gratis) · 3. Leer libro "System Design Interview" de Alex Xu · 4. Practicar URL Shortener y Chat System por tu cuenta</p>
+  </div>
+  <div class="concept-block green">
+    <h4>📈 Intermedio (3-6 meses)</h4>
+    <p>1. Tomar Grokking the System Design Interview (DesignGurus) · 2. Ver ByteByteGo channel · 3. Practicar 2-3 casos por semana con mock interviews en Pramp · 4. Leer engineering blogs de empresas</p>
+  </div>
+  <div class="concept-block purple">
+    <h4>🚀 Avanzado (6+ meses)</h4>
+    <p>1. Leer "Designing Data-Intensive Applications" (Kleppmann) · 2. Seguir InterviewReady de Gaurav Sen · 3. Leer papers académicos (Dynamo, Kafka, Cassandra) · 4. Contribuir a proyectos open source de infraestructura</p>
+  </div>
+
+  <div class="callout success">
+    <div class="callout-icon">✅</div>
+    <p><strong>La clave:</strong> Consistencia > Intensidad. 30 minutos diarios durante 6 meses supera a una semana de estudio intensivo. Practica en voz alta. Haz mock interviews reales. El conocimiento sin práctica no alcanza para las entrevistas.</p>
+  </div>
+
+</main>
+
+<footer>
+  <p>System Design Guide · <a href="../index.html">← Volver al inicio</a></p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Temas Avanzados — System Design Guide</title>
+  <link rel="stylesheet" href="../styles/main.css" />
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="../index.html">⚡ System<span>Design</span></a>
+  <div class="nav-links">
+    <a href="../01-fundamentals/index.html">Fundamentos</a>
+    <a href="../02-components/index.html">Componentes</a>
+    <a href="../03-patterns/index.html">Patrones</a>
+    <a href="../04-databases/index.html">Bases de Datos</a>
+    <a href="../05-apis/index.html">APIs</a>
+    <a href="../06-case-studies/index.html">Casos Reales</a>
+    <a href="../07-infrastructure/index.html">Infraestructura</a>
+    <a href="../08-interview-prep/index.html">Entrevistas</a>
+    <a href="../09-resources/index.html">Recursos</a>
+    <a href="../10-advanced-topics/index.html" class="active">Avanzado</a>
+    <a href="../11-security/index.html">🔐 Seguridad</a>
+    <a href="../12-search/index.html">🔍 Search</a>
+    <a href="../13-soft-skills/index.html">🎭 Soft Skills</a>
+    <a href="../14-leetcode/index.html">⚡ LeetCode</a>
+    <a href="../15-ai-engineering/index.html">🤖 AI Eng</a>
+    <a href="../16-token-optimization/index.html">🪙 Tokens</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / Temas Avanzados</div>
+  <h1>🚀 Temas Avanzados</h1>
+  <p>Capítulos de Alex Xu (Vol 1 &amp; Vol 2), ByteByteGo top concepts, y sistemas de producción reales.</p>
+</div>
+
+<main>
+
+  <!-- ALEX XU VOL 1 -->
+  <div class="section-title">📘 Alex Xu Vol. 1 — Capítulos Clave</div>
+  <p class="section-subtitle">"System Design Interview: An Insider's Guide" · Los 16 capítulos explicados.</p>
+
+  <!-- UNIQUE ID GENERATOR -->
+  <div class="concept-block">
+    <h4>Cap. 7 — Unique ID Generator en Sistemas Distribuidos</h4>
+    <p>Cómo generar IDs únicos globalmente sin un único punto de coordinación. Pregunta frecuente en Amazon y Google.</p>
+  </div>
+
+  <div class="diagram">  OPCIONES PARA GENERAR IDs ÚNICOS:
+
+  1. AUTO_INCREMENT en DB — ❌ No escala (SPOF, cuello de botella)
+
+  2. UUID (128-bit random) — Parcialmente OK
+     550e8400-e29b-41d4-a716-446655440000
+     ✅ Sin coordinación central
+     ❌ No ordenados por tiempo, 128 bits (grande)
+
+  3. Twitter Snowflake — ⭐ La solución estándar
+     64 bits total:
+     ┌──────────────────┬──────────┬────────────────┬──────────────┐
+     │ Sign bit (1 bit) │ Time ms  │ Machine ID     │ Sequence     │
+     │       0          │ 41 bits  │ 10 bits        │ 12 bits      │
+     └──────────────────┴──────────┴────────────────┴──────────────┘
+     → 41 bits de timestamp = ~69 años desde epoch custom
+     → 10 bits de machine ID = 1024 máquinas
+     → 12 bits de sequence = 4096 IDs/ms por máquina
+     → Total: 4096 × 1024 × 1000 = 4B IDs/segundo!
+     ✅ Ordenados por tiempo (útil para sorting)
+     ✅ Sin coordinación central
+     ✅ 64 bits (más compacto que UUID)</div>
+
+  <pre><code><span class="kw">import</span> time
+<span class="kw">import</span> threading
+
+<span class="kw">class</span> <span class="fn">SnowflakeIDGenerator</span>:
+    EPOCH = <span class="num">1609459200000</span>  <span class="cm"># 2021-01-01 00:00:00 UTC en ms</span>
+    MACHINE_BITS = <span class="num">10</span>
+    SEQUENCE_BITS = <span class="num">12</span>
+    MAX_SEQUENCE = (<span class="num">1</span> << SEQUENCE_BITS) - <span class="num">1</span>  <span class="cm"># 4095</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, machine_id: <span class="fn">int</span>):
+        self.machine_id = machine_id
+        self.sequence = <span class="num">0</span>
+        self.last_timestamp = -<span class="num">1</span>
+        self.lock = threading.Lock()
+
+    <span class="kw">def</span> <span class="fn">generate</span>(self) -> <span class="fn">int</span>:
+        <span class="kw">with</span> self.lock:
+            now = <span class="fn">int</span>(time.time() * <span class="num">1000</span>)
+            <span class="kw">if</span> now == self.last_timestamp:
+                self.sequence = (self.sequence + <span class="num">1</span>) & self.MAX_SEQUENCE
+                <span class="kw">if</span> self.sequence == <span class="num">0</span>:  <span class="cm"># Overflow, wait next ms</span>
+                    <span class="kw">while</span> now <= self.last_timestamp:
+                        now = <span class="fn">int</span>(time.time() * <span class="num">1000</span>)
+            <span class="kw">else</span>:
+                self.sequence = <span class="num">0</span>
+            self.last_timestamp = now
+            <span class="kw">return</span> (
+                ((now - self.EPOCH) << (<span class="num">64</span> - <span class="num">1</span> - <span class="num">41</span>)) |
+                (self.machine_id << self.SEQUENCE_BITS) |
+                self.sequence
+            )</code></pre>
+
+  <hr class="section-divider" />
+
+  <!-- KEY-VALUE STORE -->
+  <div class="section-title">Cap. 6 — Diseñar un Key-Value Store</div>
+  <p class="section-subtitle">Cómo funciona Redis/DynamoDB internamente. Pregunta de Google y Meta.</p>
+
+  <div class="diagram">  ARQUITECTURA DE UN KEY-VALUE STORE DISTRIBUIDO:
+
+  Cliente → Coordinator Node → [Consistent Hash Ring]
+                                    │
+               ┌────────────────────┼─────────────────────┐
+               ↓                    ↓                     ↓
+          [Node A]             [Node B]              [Node C]
+          Data: K1,K4          Data: K2,K5           Data: K3,K6
+          Replica: K6          Replica: K4           Replica: K5
+
+  REPLICATION (para durabilidad):
+  Al escribir K1:
+  → Write en Node A (primary)
+  → Replicar en Node B y Node C (según replication factor=3)
+  → Quorum: W=2 (esperar 2 writes confirmados)
+
+  QUORUM:
+  N = Total nodos de replicación
+  W = Mínimo writes para confirmar (write quorum)
+  R = Mínimo reads para confirmar (read quorum)
+  Si W + R > N → Strong Consistency
+  Si W + R ≤ N → Eventual Consistency
+
+  Ejemplo: N=3, W=1, R=3 → Alta disponibilidad en writes, consistente en reads</div>
+
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>📝 Storage Engine — LSM Tree + SSTable</h4>
+      <p>RocksDB, Cassandra y LevelDB usan este enfoque: Writes van al WAL (log) + memtable en memoria. Cuando la memtable se llena → se flush como SSTable inmutable al disco. Compaction periódica fusiona SSTables. Muy rápido para writes secuenciales.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>🌿 B-Tree Storage Engine</h4>
+      <p>PostgreSQL, MySQL, SQLite lo usan. El árbol está mapeado directamente al disco en páginas de tamaño fijo (típicamente 16KB). Reads y range queries muy eficientes. Writes requieren random I/O — más lento que LSM en writes masivos.</p>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- ALEX XU VOL 2 -->
+  <div class="section-title">📙 Alex Xu Vol. 2 — Sistemas Avanzados</div>
+  <p class="section-subtitle">13 capítulos de sistemas más complejos. Staff Engineer level.</p>
+
+  <!-- PROXIMITY SERVICE -->
+  <div class="concept-block">
+    <h4>Cap. 1-2 — Proximity Service / Nearby Friends</h4>
+    <p>Encontrar los N restaurants/usuarios más cercanos a tu ubicación. Usado en Yelp, Uber Eats, Tinder.</p>
+  </div>
+
+  <div class="diagram">  EL PROBLEMA: ¿Cómo encontrar los 10 restaurantes más cercanos eficientemente?
+  (No escanear toda la DB con cada request — millones de restaurants)
+
+  GEOHASH — La solución:
+  Divide el mundo en celdas de tamaño variable con códigos de letras/números.
+  Buenos Aires centro: "6f2mf"
+  Cada nivel adicional reduce el área a la mitad.
+
+  Level 1: 5000km × 5000km (ej: "6")
+  Level 4: 40km × 20km    (ej: "6f2m")
+  Level 6: 1.2km × 0.6km  (ej: "6f2mf8")
+  Level 9: 5m × 5m        (ej: "6f2mf8q4v")
+
+  BÚSQUEDA:
+  Tu geohash: "6f2mf8"
+  Buscar en DB donde geohash LIKE "6f2mf8%" ← índice en columna geohash
+  + los 8 geohashes vecinos (para no perderte lugares en el borde)
+
+  Alternativas: Google S2, Quadtree, R-Tree</div>
+
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>🗺️ Google S2 Library</h4>
+      <p>Mapea la superficie de la Tierra en celdas jerárquicas de Hilbert curve. Muy precisa para áreas irregulares. Usada por Google Maps, Foursquare, Lyft. Ventaja: celdas de tamaño uniforme en cada nivel.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>🌲 Quadtree</h4>
+      <p>Árbol donde cada nodo representa un rectángulo del mapa. Si un rectángulo tiene demasiados puntos, se divide en 4 sub-rectángulos. Muy usado internamente en apps de mapping. Twitch lo usa para broadcasting regional.</p>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- PAYMENT SYSTEM -->
+  <div class="section-title">Cap. 11 — Payment System</div>
+  <p class="section-subtitle">Diseñar un sistema de pagos seguro, confiable y consistente. Pregunta de Amazon y Stripe.</p>
+
+  <div class="callout warning">
+    <div class="callout-icon">💰</div>
+    <p><strong>El requisito más crítico en pagos:</strong> Exactamente-once (Exactly-once processing). Un pago NUNCA debe procesarse dos veces aunque haya reintentos, timeouts o fallos de red.</p>
+  </div>
+
+  <div class="diagram">  FLUJO DE PAGO — Double-Entry Accounting:
+
+  Compra $100 en Amazon:
+  ┌─────────────────────────────────────────────────────────┐
+  │  Ledger (libro contable — append-only, NUNCA se edita)  │
+  │                                                         │
+  │  Buyer Account:  -$100  (debit)                         │
+  │  Amazon Account: +$100  (credit)                        │
+  │  ─────────────────────────────────────────              │
+  │  Balance: $0 (suma siempre debe ser 0)                  │
+  └─────────────────────────────────────────────────────────┘
+  ✅ Si los dos lados no cuadran → transacción inválida
+  ✅ Audit trail completo de toda la historia
+
+  FLUJO TÉCNICO:
+  User → [Payment Service] → Idempotency Check → PSP (Stripe/PayPal)
+             │                    │
+         [Ledger DB]         [Orders DB]
+         (PostgreSQL)        (PostgreSQL)
+             │
+         [Kafka] → [Analytics, Reconciliation, Alerts]</div>
+
+  <div class="grid grid-3">
+    <div class="concept-block">
+      <h4>🔑 Idempotency Key</h4>
+      <p>El cliente genera un UUID único por intento de pago. El servidor guarda (idempotency_key, result) en DB. Si recibe el mismo key → devuelve el resultado cacheado sin reprocesar. Protege contra double-charge en reintentos.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>🔄 Reconciliation</h4>
+      <p>Proceso batch nocturno que compara los registros del sistema interno con los del PSP (Stripe). Detecta discrepancias: pagos que Stripe cobró pero no registramos, o viceversa. Crítico para auditoría.</p>
+    </div>
+    <div class="concept-block purple">
+      <h4>💱 PSP (Payment Service Provider)</h4>
+      <p>Stripe, PayPal, Adyen. Manejan el flujo con tarjetas/bancos. Tu sistema no guarda datos de tarjeta (PCI compliance) — Stripe lo hace por ti. Webhook para notificaciones async de éxito/fallo.</p>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- STOCK EXCHANGE -->
+  <div class="section-title">Cap. 13 — Stock Exchange</div>
+  <p class="section-subtitle">El sistema técnico más complejo. Latencia de microsegundos, matching engine, orden total.</p>
+
+  <div class="diagram">  MATCHING ENGINE — El corazón del exchange:
+
+  Order Book (para cada par, ej BTC/USD):
+  ┌──────────────────────────────────────────┐
+  │              ORDER BOOK                  │
+  │         BIDS (compras)                   │
+  │  $42,000.00 × 1.5 BTC  ← mejor bid      │
+  │  $41,999.00 × 2.0 BTC                    │
+  │  $41,500.00 × 5.0 BTC                    │
+  │  ─────────────────────────────────────   │
+  │         ASKS (ventas)                    │
+  │  $42,001.00 × 0.8 BTC  ← mejor ask      │
+  │  $42,005.00 × 3.0 BTC                    │
+  │  $42,010.00 × 1.2 BTC                    │
+  └──────────────────────────────────────────┘
+  Spread: $42,001 - $42,000 = $1
+
+  MATCHING ALGORITHM:
+  Nueva orden: BUY 1 BTC @ $42,001
+  → Match con mejor ASK ($42,001 × 0.8 BTC)
+  → Trade ejecutado: 0.8 BTC @ $42,001
+  → 0.2 BTC restantes quedan en el Order Book como BID</div>
+
+  <div class="concept-block red">
+    <h4>⚡ Latencia Ultra-baja (HFT — High Frequency Trading)</h4>
+    <p>Los exchanges deben operar en <strong>microsegundos</strong> (millonésimas de segundo). Técnicas: kernel bypass (DPDK), CPU pinning, lock-free data structures (LMAX Disruptor pattern), colocation (servidores físicamente dentro del exchange). El orden en que llegan los mensajes debe ser determinístico — sin varianza.</p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- METRICS MONITORING -->
+  <div class="section-title">Cap. 5 — Metrics Monitoring &amp; Alerting</div>
+  <p class="section-subtitle">Diseñar un sistema tipo Datadog o Prometheus. Pregunta de Site Reliability Engineers.</p>
+
+  <div class="diagram">  ARQUITECTURA DE METRICS MONITORING:
+
+  [App Servers] → [Metrics Agents] → [Kafka] → [Stream Processor]
+  (collect)                                           │
+                                               ┌──────┴──────┐
+                                               ↓             ↓
+                                         [Time Series DB] [Alert Engine]
+                                         (InfluxDB/         (Alertmanager)
+                                          Prometheus)            │
+                                               │                 ↓
+                                               ↓          [PagerDuty/Slack]
+                                         [Grafana]
+                                         (visualización)</div>
+
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>📊 Tipos de Métricas</h4>
+      <p>
+        <strong>Counter:</strong> Solo sube. Total de requests, errores. (ej: requests_total)<br/>
+        <strong>Gauge:</strong> Sube y baja. CPU, memoria, conexiones activas. (ej: cpu_usage)<br/>
+        <strong>Histogram:</strong> Distribuye en buckets. Latencia de requests. P50, P95, P99.<br/>
+        <strong>Summary:</strong> Como histogram pero pre-calculado en el cliente.
+      </p>
+    </div>
+    <div class="concept-block green">
+      <h4>🗜️ Time Series DB</h4>
+      <p>Optimizadas para datos con timestamp. <strong>Comprimen</strong> series temporales eficientemente (delta encoding, XOR encoding). Retención configurable: datos recientes a máxima resolución, datos viejos downsampled. InfluxDB, Prometheus, TimescaleDB, VictoriaMetrics.</p>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- AD CLICK AGGREGATION -->
+  <div class="section-title">Cap. 6 — Ad Click Event Aggregation</div>
+  <p class="section-subtitle">Contar billions de clicks de anuncios en tiempo real. El problema de streaming processing.</p>
+
+  <div class="diagram">  EL PROBLEMA:
+  1 billón de clicks/día = ~11,574 clicks/segundo
+  Necesitamos contar cuántos clicks tuvo ad_id=X en los últimos 5 minutos
+
+  SOLUCIÓN: Stream Processing con ventanas de tiempo
+
+  [Ad Click Events] → [Kafka] → [Flink/Spark Streaming]
+                                       │
+                               Tumbling Window (5 min):
+                               ┌─────────────────────┐
+                               │  t=0:00  →  t=5:00  │
+                               │  ad_id=X: 1,247      │
+                               │  ad_id=Y: 892        │
+                               └─────────────────────┘
+                               ┌─────────────────────┐
+                               │  t=5:00  →  t=10:00 │
+                               │  ad_id=X: 1,891      │
+                               └─────────────────────┘
+                                       │
+                               [OLAP DB: ClickHouse]
+                               (consultas analíticas rápidas)</div>
+
+  <div class="concept-block">
+    <h4>🪣 Watermark — Manejo de Late Arriving Events</h4>
+    <p>Los eventos pueden llegar fuera de orden (un click a las 5:02 puede llegar al procesador a las 5:08). El watermark define cuánto tiempo esperamos antes de cerrar una ventana. Watermark = event_time_max - tolerance (ej: 2 minutos). Balance: mayor tolerancia = resultados más completos, mayor latencia.</p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- BYTEBYTEGO TOP CONCEPTS -->
+  <div class="section-title">🎨 ByteByteGo — Top Conceptos Visuales</div>
+  <p class="section-subtitle">Los temas más populares del canal de Alex Xu con más de 1M suscriptores.</p>
+
+  <div class="grid grid-3">
+    <div class="card">
+      <span class="card-icon">🔗</span>
+      <h3>HTTPS — Cómo funciona</h3>
+      <p>TLS Handshake: ClientHello → ServerHello → Certificate → Key Exchange → Finished. El browser verifica el certificado contra CAs de confianza. Después del handshake, todo viaja encriptado con AES.</p>
+      <span class="tag tag-blue">Networking</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🔐</span>
+      <h3>JWT vs Session Tokens</h3>
+      <p>Sessions: el servidor guarda el estado. JWT: stateless, el token lleva el estado. JWT no puede invalidarse antes de expirar sin blocklist. Sessions requieren storage compartido en multi-server setups.</p>
+      <span class="tag tag-purple">Auth</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🌐</span>
+      <h3>DNS — Cómo funciona</h3>
+      <p>Browser → Local cache → OS cache → ISP Resolver → Root nameserver → TLD (.com) → Authoritative nameserver → IP. TTL define cuánto se cachea en cada nivel. Así escala DNS globalmente.</p>
+      <span class="tag tag-green">Networking</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🚇</span>
+      <h3>gRPC vs REST vs GraphQL</h3>
+      <p>gRPC: binary (protobuf), HTTP/2, streaming nativo, ~7x más rápido en serialización. REST: JSON, HTTP/1.1, universal. GraphQL: query language, un solo endpoint, elimina over-fetching.</p>
+      <span class="tag tag-orange">APIs</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🏗️</span>
+      <h3>Monorepo vs Polyrepo</h3>
+      <p>Monorepo (Google, Meta, Twitter): todo en un repo, refactoring atómico, CI complejo. Polyrepo: repos separados por servicio, equipos autónomos, dependencias más difíciles de coordinar.</p>
+      <span class="tag tag-red">DevOps</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">📦</span>
+      <h3>Docker vs VM</h3>
+      <p>VM: virtualiza hardware completo (OS propio, segundos para arrancar, GB de tamaño). Docker: comparte el kernel del host, arranca en milisegundos, MB de tamaño. Docker es para apps, VM para aislamiento total.</p>
+      <span class="tag tag-blue">Infra</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">⚡</span>
+      <h3>Event-Driven vs Request-Driven</h3>
+      <p>Request-driven: servicios se llaman directamente (HTTP/gRPC). Altamente acoplado. Event-driven: servicios emiten eventos, otros suscriben. Desacoplado, escalable, eventual consistency.</p>
+      <span class="tag tag-purple">Arquitectura</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🔄</span>
+      <h3>Blue-Green Deployment</h3>
+      <p>Dos ambientes idénticos (Blue=prod actual, Green=nueva versión). Deploy en Green → test → switch el load balancer. Rollback instantáneo si algo falla. Zero downtime deploys.</p>
+      <span class="tag tag-green">DevOps</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🌊</span>
+      <h3>Kafka — Cómo escala</h3>
+      <p>Topics divididos en Partitions. Cada partition es un log ordenado. Consumer Groups leen partitions en paralelo. Retención configurable. Replicación entre brokers. Millones de msgs/segundo por cluster.</p>
+      <span class="tag tag-orange">Streaming</span>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- DESIGN PATTERNS FROM HELLOINTERVIEW -->
+  <div class="section-title">🎯 HelloInterview — Patrones de Diseño en Entrevistas</div>
+  <p class="section-subtitle">Estrategias concretas para problemas recurrentes en system design interviews.</p>
+
+  <div class="concept-block">
+    <h4>🏗️ Patrón: "Scale From Zero to Millions"</h4>
+    <p>El enfoque de Alex Xu: empieza con el diseño más simple posible y evoluciona paso a paso bajo presión del interviewer.</p>
+  </div>
+
+  <div class="diagram">  EVOLUCIÓN DE UN SISTEMA (Tier por Tier):
+
+  TIER 1 — Un solo servidor (MVP):
+  [Web + App + DB en un servidor]
+  ✅ Simple, barato   ❌ SPOF, no escala
+
+  TIER 2 — Separar capas:
+  [Web Server] → [App Server] → [Database]
+  ✅ Escala web/app independiente   ❌ DB sigue siendo SPOF
+
+  TIER 3 — Replicación de DB + Cache:
+  [LB] → [App Servers x3] → [Cache] → [DB Primary]
+                                            ↓
+                                      [DB Replicas]
+  ✅ Alta disponibilidad en reads   ❌ Write bottleneck
+
+  TIER 4 — Sharding + CDN:
+  [CDN] → [LB] → [App Servers] → [Cache Cluster]
+                                        ↓
+                              [DB Shard 0] [DB Shard 1]
+  ✅ Escala horizontal total   ❌ Complejidad operacional alta
+
+  TIER 5 — Microservicios + Multi-Region:
+  Cada dominio es un servicio independiente.
+  Multi-region para latencia global y disaster recovery.</div>
+
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>📐 Stateless vs Stateful</h4>
+      <p><strong>Stateless:</strong> Cualquier servidor puede manejar cualquier request. El estado se guarda en DB/cache. <strong>Fácil de escalar horizontalmente.</strong> JWT, cada request lleva su propio contexto.<br/>
+      <strong>Stateful:</strong> El servidor recuerda conversaciones pasadas. Requiere sticky sessions o session sharing. Difícil de escalar.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>🔃 Pull vs Push</h4>
+      <p><strong>Pull:</strong> Los consumers piden datos cuando los necesitan. Simple, consumer controla el ritmo. Kafka es pull-based.<br/>
+      <strong>Push:</strong> El producer envía datos a consumers. Menor latencia. Riesgo de overwhelm si el consumer es lento (necesita back-pressure). WebSockets, webhooks.</p>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- NAVEGACIÓN -->
+  <div class="section-title">Continuar el Aprendizaje</div>
+  <div class="grid grid-3">
+    <a class="card" href="../06-case-studies/index.html">
+      <span class="card-icon">🔬</span>
+      <h3>Casos de Estudio →</h3>
+      <p>Aplica estos conceptos en sistemas reales: Twitter, YouTube, WhatsApp.</p>
+    </a>
+    <a class="card" href="../08-interview-prep/index.html">
+      <span class="card-icon">🎯</span>
+      <h3>Prep Entrevistas →</h3>
+      <p>Framework de 7 pasos y preguntas de FAANG.</p>
+    </a>
+    <a class="card" href="../09-resources/index.html">
+      <span class="card-icon">📖</span>
+      <h3>Recursos →</h3>
+      <p>Libros de Alex Xu, Gaurav Sen, repos con 233k+ estrellas.</p>
+    </a>
+  </div>
+
+</main>
+
+<footer>
+  <p>System Design Guide · <a href="../index.html">← Volver al inicio</a></p>
+</footer>
+
+</body>
+</html>

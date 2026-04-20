@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Infraestructura — System Design Guide</title>
+  <link rel="stylesheet" href="../styles/main.css" />
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="../index.html">⚡ System<span>Design</span></a>
+  <div class="nav-links">
+    <a href="../01-fundamentals/index.html">Fundamentos</a>
+    <a href="../02-components/index.html">Componentes</a>
+    <a href="../03-patterns/index.html">Patrones</a>
+    <a href="../04-databases/index.html">Bases de Datos</a>
+    <a href="../05-apis/index.html">APIs</a>
+    <a href="../06-case-studies/index.html">Casos Reales</a>
+    <a href="../07-infrastructure/index.html" class="active">Infraestructura</a>
+    <a href="../08-interview-prep/index.html">Entrevistas</a>
+    <a href="../09-resources/index.html">Recursos</a>
+    <a href="../10-advanced-topics/index.html">Avanzado</a>
+    <a href="../11-security/index.html">🔐 Seguridad</a>
+    <a href="../12-search/index.html">🔍 Search</a>
+    <a href="../13-soft-skills/index.html">🎭 Soft Skills</a>
+    <a href="../14-leetcode/index.html">⚡ LeetCode</a>
+    <a href="../15-ai-engineering/index.html">🤖 AI Eng</a>
+    <a href="../16-token-optimization/index.html">🪙 Tokens</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / Infraestructura</div>
+  <h1>☁️ Infraestructura &amp; DevOps</h1>
+  <p>Docker, Kubernetes, CI/CD, monitoring y todo lo que necesitas para operar sistemas en producción.</p>
+</div>
+
+<main>
+
+  <!-- DOCKER -->
+  <div class="section-title">Docker &amp; Containerización</div>
+  <p class="section-subtitle">Empaquetar aplicaciones con sus dependencias para que corran igual en cualquier entorno.</p>
+
+  <div class="diagram">  SIN CONTAINERS:
+  "En mi máquina funciona" 🤦
+  Dev: Python 3.9, libssl 1.1
+  Prod: Python 3.7, libssl 3.0
+  → Comportamiento diferente
+
+  CON CONTAINERS:
+  ┌─────────────────────────────────────────┐
+  │  Container (inmutable, portable)         │
+  │  ┌──────────────┐                        │
+  │  │ Tu App       │                        │
+  │  │ Python 3.11  │ ← mismo en dev y prod  │
+  │  │ libssl 3.0   │                        │
+  │  │ dependencies │                        │
+  │  └──────────────┘                        │
+  │  [Linux Kernel del Host]                 │
+  └─────────────────────────────────────────┘</div>
+
+  <pre><code><span class="cm"># Dockerfile básico para una API Python</span>
+<span class="kw">FROM</span> python:<span class="num">3.11</span>-slim
+
+<span class="kw">WORKDIR</span> /app
+
+<span class="kw">COPY</span> requirements.txt .
+<span class="kw">RUN</span> pip install --no-cache-dir -r requirements.txt
+
+<span class="kw">COPY</span> . .
+
+<span class="kw">EXPOSE</span> <span class="num">8000</span>
+<span class="kw">CMD</span> [<span class="str">"uvicorn"</span>, <span class="str">"main:app"</span>, <span class="str">"--host"</span>, <span class="str">"0.0.0.0"</span>, <span class="str">"--port"</span>, <span class="str">"8000"</span>]</code></pre>
+
+  <hr class="section-divider" />
+
+  <!-- KUBERNETES -->
+  <div class="section-title">Kubernetes (K8s)</div>
+  <p class="section-subtitle">Orquestador de containers. Maneja deployment, scaling, self-healing y networking.</p>
+
+  <div class="diagram">  KUBERNETES CLUSTER:
+
+  ┌─────────────────────────────────────────────────┐
+  │  Control Plane (Master)                          │
+  │  ┌─────────────┐ ┌──────────┐ ┌──────────────┐  │
+  │  │  API Server  │ │Scheduler │ │Controller Mgr│  │
+  │  └─────────────┘ └──────────┘ └──────────────┘  │
+  │  ┌───────────────────────────────────────────┐   │
+  │  │  etcd (cluster state storage)             │   │
+  │  └───────────────────────────────────────────┘   │
+  └─────────────────────────────────────────────────┘
+                        │
+        ┌───────────────┼───────────────┐
+        ↓               ↓               ↓
+   [Node 1]        [Node 2]        [Node 3]
+   ┌─────────┐    ┌─────────┐    ┌─────────┐
+   │ Pod     │    │ Pod     │    │ Pod     │
+   │ Pod     │    │ Pod     │    │ Pod     │
+   │ kubelet │    │ kubelet │    │ kubelet │
+   └─────────┘    └─────────┘    └─────────┘</div>
+
+  <div class="grid grid-3">
+    <div class="concept-block">
+      <h4>📦 Pod</h4>
+      <p>La unidad mínima de K8s. Uno o más containers que comparten red y storage. Efímeros — si mueren, el Deployment crea nuevos.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>🔄 Deployment</h4>
+      <p>Gestiona los Pods. Define cuántas réplicas, qué imagen, rolling updates, rollbacks automáticos si algo falla.</p>
+    </div>
+    <div class="concept-block purple">
+      <h4>🌐 Service</h4>
+      <p>Expone Pods internamente o externamente. Actúa como load balancer interno. Los Pods tienen IPs dinámicas; el Service tiene IP estable.</p>
+    </div>
+    <div class="concept-block orange">
+      <h4>📈 HPA (Autoscaler)</h4>
+      <p>Horizontal Pod Autoscaler. Escala automáticamente el número de Pods según CPU, memoria o métricas custom.</p>
+    </div>
+    <div class="concept-block red">
+      <h4>🔒 ConfigMap &amp; Secret</h4>
+      <p>ConfigMap: configuración no sensible. Secret: passwords, API keys. Se inyectan como variables de entorno o archivos.</p>
+    </div>
+    <div class="concept-block">
+      <h4>🌍 Ingress</h4>
+      <p>Punto de entrada HTTP/HTTPS al cluster. Maneja routing por path o host, SSL termination. Nginx Ingress es el más común.</p>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- CI/CD -->
+  <div class="section-title">CI/CD — Continuous Integration &amp; Delivery</div>
+  <p class="section-subtitle">Automatizar el proceso desde el commit hasta producción.</p>
+
+  <div class="diagram">  CI/CD PIPELINE:
+
+  Developer → git push → [CI Triggered]
+                              │
+                    ┌─────────┴──────────┐
+                    │  1. Checkout code  │
+                    │  2. Install deps   │
+                    │  3. Run linter     │
+                    │  4. Run tests      │
+                    │  5. Build Docker   │
+                    │  6. Push to registry│
+                    └─────────┬──────────┘
+                              │ Si todo pasa ✅
+                    ┌─────────┴──────────┐
+                    │  CD (Deploy)       │
+                    │  → Staging primero │
+                    │  → Tests en staging│
+                    │  → Producción      │
+                    └────────────────────┘</div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <span class="card-icon">🔵</span>
+      <h3>GitHub Actions</h3>
+      <p>El más popular para repos en GitHub. YAML-based. 2,000 min gratis/mes. Marketplace de actions prehechas. Nativo en GitHub.</p>
+    </div>
+    <div class="card">
+      <span class="card-icon">🔶</span>
+      <h3>GitLab CI/CD</h3>
+      <p>Integrado en GitLab. Potente y flexible. Auto DevOps para configuración automática. Popular en empresas que se hostan GitLab.</p>
+    </div>
+    <div class="card">
+      <span class="card-icon">🔴</span>
+      <h3>Jenkins</h3>
+      <p>El más antiguo y configurable. Requiere más setup. 1,800+ plugins. Muy usado en empresas grandes con pipelines complejos.</p>
+    </div>
+    <div class="card">
+      <span class="card-icon">⚡</span>
+      <h3>CircleCI / TravisCI</h3>
+      <p>Fáciles de configurar. Muy rápidos. Buena DX. CircleCI es especialmente popular en startups americanas.</p>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- MONITORING -->
+  <div class="section-title">Monitoring, Logging &amp; Alertas</div>
+  <p class="section-subtitle">Los tres pilares de la observabilidad: métricas, logs y trazas.</p>
+
+  <div class="diagram">  THE THREE PILLARS OF OBSERVABILITY:
+
+  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+  │   METRICS   │  │    LOGS     │  │   TRACES    │
+  │             │  │             │  │             │
+  │ ¿Qué está  │  │ ¿Qué pasó? │  │ ¿Dónde está │
+  │ pasando en  │  │ Eventos     │  │ la latencia?│
+  │ el sistema? │  │ estructurados│  │ Distributed │
+  │             │  │             │  │ tracing     │
+  │ Prometheus  │  │ ELK Stack   │  │ Jaeger      │
+  │ Grafana     │  │ Datadog     │  │ Zipkin      │
+  │ Datadog     │  │ CloudWatch  │  │ OpenTelemetry│
+  └─────────────┘  └─────────────┘  └─────────────┘</div>
+
+  <div class="concept-block">
+    <h4>📊 Métricas — ¿Qué monitorear?</h4>
+    <p>
+      <strong>Los 4 Golden Signals (Google SRE):</strong><br/>
+      · <strong>Latency:</strong> P50, P95, P99 de response time<br/>
+      · <strong>Traffic:</strong> QPS (requests per second)<br/>
+      · <strong>Errors:</strong> Tasa de errores 4xx/5xx<br/>
+      · <strong>Saturation:</strong> CPU, RAM, disco, conexiones de DB
+    </p>
+  </div>
+
+  <div class="concept-block green">
+    <h4>📝 Structured Logging</h4>
+    <p>Logs en JSON. Cada log tiene timestamp, level, service, trace_id, y contexto relevante. Los logs estructurados son fácilmente consultables en Kibana/Datadog/CloudWatch.</p>
+  </div>
+  <pre><code><span class="cm"># Structured log en Python</span>
+<span class="kw">import</span> structlog
+
+log = structlog.get_logger()
+log.info(<span class="str">"order_placed"</span>,
+    order_id=order.id,
+    user_id=user.id,
+    amount=order.total,
+    trace_id=request.headers[<span class="str">"X-Trace-ID"</span>]
+)
+<span class="cm"># Output: {"event": "order_placed", "order_id": 123, "user_id": 456, ...}</span></code></pre>
+
+  <hr class="section-divider" />
+
+  <!-- CLOUD COMPARISON -->
+  <div class="section-title">AWS vs GCP vs Azure — Servicios Equivalentes</div>
+
+  <table>
+    <thead>
+      <tr><th>Categoría</th><th>AWS</th><th>GCP</th><th>Azure</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Compute (VMs)</td><td>EC2</td><td>Compute Engine</td><td>Virtual Machines</td></tr>
+      <tr><td>Serverless</td><td>Lambda</td><td>Cloud Functions</td><td>Azure Functions</td></tr>
+      <tr><td>Container (managed)</td><td>ECS / EKS</td><td>GKE</td><td>AKS</td></tr>
+      <tr><td>Object Storage</td><td>S3</td><td>Cloud Storage</td><td>Blob Storage</td></tr>
+      <tr><td>SQL Database</td><td>RDS / Aurora</td><td>Cloud SQL / Spanner</td><td>Azure SQL</td></tr>
+      <tr><td>NoSQL</td><td>DynamoDB</td><td>Firestore / Bigtable</td><td>CosmosDB</td></tr>
+      <tr><td>Message Queue</td><td>SQS / SNS</td><td>Pub/Sub</td><td>Service Bus</td></tr>
+      <tr><td>Cache</td><td>ElastiCache</td><td>Memorystore</td><td>Azure Cache</td></tr>
+      <tr><td>CDN</td><td>CloudFront</td><td>Cloud CDN</td><td>Azure CDN</td></tr>
+      <tr><td>Load Balancer</td><td>ALB / NLB</td><td>Cloud Load Balancing</td><td>Azure LB</td></tr>
+      <tr><td>Monitoring</td><td>CloudWatch</td><td>Cloud Monitoring</td><td>Azure Monitor</td></tr>
+      <tr><td>Market Share (2025)</td><td>~33%</td><td>~11%</td><td>~22%</td></tr>
+    </tbody>
+  </table>
+
+  <hr class="section-divider" />
+
+  <!-- DEPLOYMENT STRATEGIES -->
+  <div class="section-title">Deployment Strategies</div>
+  <p class="section-subtitle">Cómo deployar sin downtime y con capacidad de rollback rápido. Senior engineers deben conocer las diferencias.</p>
+
+  <div class="diagram">  ROLLING DEPLOYMENT (el default de Kubernetes):
+
+  Versión A: [S1] [S2] [S3] [S4] [S5] [S6]
+
+  Paso 1: reemplaza S1 con v2: [S1v2] [S2] [S3] [S4] [S5] [S6]
+  Paso 2: reemplaza S2 con v2: [S1v2] [S2v2] [S3] [S4] [S5] [S6]
+  ...gradualmente...
+  Final: [S1v2] [S2v2] [S3v2] [S4v2] [S5v2] [S6v2]
+
+  ✅ Sin downtime
+  ✅ Sin recursos extra
+  ❌ Durante la migración, v1 y v2 corren simultáneamente
+  ❌ Rollback lento (hay que reemplazar hacia atrás)
+  ❌ Problemas: APIs incompatibles entre v1 y v2
+
+  ─────────────────────────────────────────────────────────
+
+  BLUE-GREEN DEPLOYMENT:
+
+  [Load Balancer]
+        │
+    Blue (v1) ← activo (100% del tráfico)
+    Green (v2) ← deploy nueva versión aquí (sin tráfico)
+
+  Testing completo en Green → todo OK?
+  Swap instantáneo del Load Balancer:
+    Blue (v1) ← sin tráfico (stand-by para rollback)
+    Green (v2) ← activo (100% del tráfico)
+
+  ✅ Zero downtime
+  ✅ Rollback instantáneo (switch back al Blue)
+  ✅ v1 y v2 NUNCA corren simultáneamente
+  ❌ Requiere doble recursos (dos ambientes completos)
+  ❌ Sessions del usuario pueden perderse en el swap
+
+  ─────────────────────────────────────────────────────────
+
+  CANARY DEPLOYMENT (el más sofisticado):
+
+  Deploy v2 a un pequeño % del tráfico:
+  [LB] → 95% → [v1 servers]
+              → 5% → [v2 servers] ← "canaries"
+
+  Monitorear métricas de v2:
+  ¿Error rate OK? ¿Latencia OK? ¿Conversión OK?
+  → SÍ: aumentar gradualmente 5% → 10% → 25% → 50% → 100%
+  → NO: rollback instantáneo (quitar el 5% de v2)
+
+  ✅ Rollback muy rápido
+  ✅ Testea en producción real con usuarios reales
+  ✅ Detecta problemas antes de afectar a todos
+  ❌ Complejidad de infraestructura
+  ❌ v1 y v2 corren simultáneamente (compatibilidad)</div>
+
+  <div class="grid grid-3">
+    <div class="concept-block">
+      <h4>¿Cuándo usar cada uno?</h4>
+      <p><strong>Rolling:</strong> Default. La mayoría de deployments.<br/><strong>Blue-Green:</strong> Cuando el rollback instantáneo es crítico (fintech, e-commerce).<br/><strong>Canary:</strong> Features nuevos con incertidumbre. A/B testing implícito. Netflix, Google, Facebook lo usan para todos sus deployments.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>Feature Flags</h4>
+      <p>Deploya el código pero activa el feature para un % de usuarios desde configuración (LaunchDarkly, Unleash, Flipt). El deploy y el "release" son eventos separados. Permite rollback instantáneo sin nuevo deploy. Muy poderoso combinado con Canary.</p>
+    </div>
+    <div class="concept-block purple">
+      <h4>Kubernetes Rollout</h4>
+      <p><code>kubectl rollout undo deployment/api</code> → rollback instantáneo al deployment anterior. K8s guarda historial de revisiones. <code>kubectl rollout status</code> → monitorea el rolling update en tiempo real. Configurable: maxSurge, maxUnavailable.</p>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- RTO vs RPO -->
+  <div class="section-title">RTO vs RPO — Disaster Recovery</div>
+  <p class="section-subtitle">Las dos métricas más importantes de resiliencia. Pregunta directa en entrevistas senior de infraestructura.</p>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <span class="card-icon">⏱️</span>
+      <h3>RTO — Recovery Time Objective</h3>
+      <p><strong>¿Cuánto tiempo puede estar caído el sistema?</strong></p>
+      <p style="margin-top:0.75rem; color:var(--text-muted)">Cuánto tarda en volver a estar operativo después de un desastre. Cuanto menor el RTO, más caro el setup.</p>
+      <ul style="margin-top:0.75rem; padding-left:1.2rem; color:var(--text-muted); font-size:0.88rem; line-height:2;">
+        <li>RTO = 4h → Multi-AZ con failover manual</li>
+        <li>RTO = 15min → Multi-AZ con failover automático</li>
+        <li>RTO = &lt;1min → Multi-Region Active-Active</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="card-icon">💾</span>
+      <h3>RPO — Recovery Point Objective</h3>
+      <p><strong>¿Cuántos datos podés perder?</strong></p>
+      <p style="margin-top:0.75rem; color:var(--text-muted)">Cuántos datos se pueden perder entre el último backup/replica y el momento del desastre.</p>
+      <ul style="margin-top:0.75rem; padding-left:1.2rem; color:var(--text-muted); font-size:0.88rem; line-height:2;">
+        <li>RPO = 24h → Backup diario</li>
+        <li>RPO = 1h → Backup cada hora</li>
+        <li>RPO = 0 → Replicación síncrona (más lento)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="diagram">  ESTRATEGIAS DE DISASTER RECOVERY (de más barato a más caro):
+
+  1. BACKUP & RESTORE (RTO: horas, RPO: horas)
+     S3 backups diarios. Si hay desastre → restaurar desde backup.
+     Costo: $ (solo storage)
+     Caso de uso: datos no críticos, apps internas
+
+  2. PILOT LIGHT (RTO: 30min, RPO: minutos)
+     Una versión mínima del sistema siempre corriendo en DR region.
+     DB replicada continuamente. Servidores APAGADOS (arrange para encender).
+     Costo: $$ (DB + un poco de compute)
+     Caso de uso: SaaS B2B, datos financieros no-críticos
+
+  3. WARM STANDBY (RTO: minutos, RPO: segundos)
+     Versión completa pero reducida del sistema en DR region, siempre on.
+     Si hay desastre → escalar el standby y redirigir tráfico.
+     Costo: $$$ (todo el stack pero tamaño reducido)
+     Caso de uso: SaaS B2B crítico, healthcare
+
+  4. MULTI-SITE ACTIVE-ACTIVE (RTO: &lt;1min, RPO: ~0)
+     Dos regiones sirven tráfico simultáneamente.
+     Si una región falla → DNS automático a la otra.
+     Costo: $$$$ (x2 todo)
+     Caso de uso: Fintech, trading, infraestructura crítica</div>
+
+  <hr class="section-divider" />
+
+  <!-- CHAOS ENGINEERING -->
+  <div class="section-title">Chaos Engineering</div>
+  <p class="section-subtitle">Testear la resiliencia del sistema inyectando fallos intencionales en producción. El approach de Netflix.</p>
+
+  <div class="callout">
+    <div class="callout-icon">💡</div>
+    <p><strong>La filosofía:</strong> "La única manera de saber cómo un sistema se comporta en producción es testear en producción." Mejor descubrir las fallas durante un ejercicio controlado que durante un incidente real a las 3am.</p>
+  </div>
+
+  <div class="concept-block">
+    <h4>Chaos Monkey (Netflix, open source)</h4>
+    <p>Mata instancias aleatoriamente en producción durante horas laborales. Fuera en 2011 cuando Netflix migró a AWS. Encontraron que si una instancia muere y el sistema no se recupera automáticamente, es mejor encontrarlo en horario laboral que a las 3am. Simian Army: familia de tools para distintos tipos de fallos.</p>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="concept-block green">
+      <h4>Tipos de Experimentos</h4>
+      <p>
+        <strong>Network latency:</strong> inyectar 200ms de latencia extra en llamadas entre servicios. ¿Qué se rompe?<br/>
+        <strong>Service kill:</strong> matar una instancia al azar. ¿El sistema se recupera?<br/>
+        <strong>CPU stress:</strong> saturar CPU de un nodo. ¿El LB deja de routear ahí?<br/>
+        <strong>Packet loss:</strong> perder 10% de paquetes entre servicios. ¿Los retries funcionan?<br/>
+        <strong>AZ failure:</strong> simular que toda una Availability Zone cae.
+      </p>
+    </div>
+    <div class="concept-block purple">
+      <h4>Herramientas</h4>
+      <p>
+        <strong>Chaos Monkey:</strong> Netflix, open source, mata instancias.<br/>
+        <strong>Gremlin:</strong> Plataforma SaaS completa para Chaos Engineering.<br/>
+        <strong>Chaos Toolkit:</strong> Open source, declarativo.<br/>
+        <strong>Toxiproxy (Shopify):</strong> Proxy para simular condiciones de red adversas.<br/>
+        <strong>k6:</strong> Load testing que puedes usar para chaos de performance.
+      </p>
+    </div>
+  </div>
+
+  <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+    <a class="card" href="../08-interview-prep/index.html" style="flex: 1; min-width: 200px;">
+      <span class="card-icon">🎯</span>
+      <h3>Prep Entrevistas →</h3>
+      <p>Framework completo para entrevistas técnicas.</p>
+    </a>
+    <a class="card" href="../09-resources/index.html" style="flex: 1; min-width: 200px;">
+      <span class="card-icon">📖</span>
+      <h3>Recursos →</h3>
+      <p>Libros, cursos y canales de YouTube.</p>
+    </a>
+  </div>
+
+</main>
+
+<footer>
+  <p>System Design Guide · <a href="../index.html">← Volver al inicio</a></p>
+</footer>
+
+</body>
+</html>

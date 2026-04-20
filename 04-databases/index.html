@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bases de Datos — System Design Guide</title>
+  <link rel="stylesheet" href="../styles/main.css" />
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="../index.html">⚡ System<span>Design</span></a>
+  <div class="nav-links">
+    <a href="../01-fundamentals/index.html">Fundamentos</a>
+    <a href="../02-components/index.html">Componentes</a>
+    <a href="../03-patterns/index.html">Patrones</a>
+    <a href="../04-databases/index.html" class="active">Bases de Datos</a>
+    <a href="../05-apis/index.html">APIs</a>
+    <a href="../06-case-studies/index.html">Casos Reales</a>
+    <a href="../07-infrastructure/index.html">Infraestructura</a>
+    <a href="../08-interview-prep/index.html">Entrevistas</a>
+    <a href="../09-resources/index.html">Recursos</a>
+    <a href="../10-advanced-topics/index.html">Avanzado</a>
+    <a href="../11-security/index.html">🔐 Seguridad</a>
+    <a href="../12-search/index.html">🔍 Search</a>
+    <a href="../13-soft-skills/index.html">🎭 Soft Skills</a>
+    <a href="../14-leetcode/index.html">⚡ LeetCode</a>
+    <a href="../15-ai-engineering/index.html">🤖 AI Eng</a>
+    <a href="../16-token-optimization/index.html">🪙 Tokens</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / Bases de Datos</div>
+  <h1>🗄️ Bases de Datos</h1>
+  <p>Cómo elegir, escalar y diseñar el layer de datos de cualquier sistema.</p>
+</div>
+
+<main>
+
+  <!-- SQL vs NOSQL -->
+  <div class="section-title">SQL vs NoSQL</div>
+  <p class="section-subtitle">La decisión más frecuente en entrevistas de system design.</p>
+
+  <table>
+    <thead>
+      <tr><th>Característica</th><th>SQL (Relacional)</th><th>NoSQL</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Schema</td><td>Rígido, predefinido</td><td>Flexible, dinámico</td></tr>
+      <tr><td>Consistencia</td><td>ACID (fuerte)</td><td>BASE (eventual, mayormente)</td></tr>
+      <tr><td>Escalabilidad</td><td>Vertical principalmente</td><td>Horizontal nativamente</td></tr>
+      <tr><td>Queries complejas</td><td>✅ JOINs, agregaciones</td><td>❌ Limitado</td></tr>
+      <tr><td>Velocidad de escritura</td><td>Moderada</td><td>Muy alta</td></tr>
+      <tr><td>Casos de uso</td><td>Finanzas, e-commerce, ERP</td><td>Social, IoT, real-time, ML</td></tr>
+      <tr><td>Ejemplos</td><td>PostgreSQL, MySQL, Aurora</td><td>MongoDB, Cassandra, DynamoDB</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <div class="callout-icon">🎯</div>
+    <p><strong>En una entrevista:</strong> Por default usa SQL. Justifica NoSQL solo cuando tengas una razón clara: escala masiva de escrituras, schema que cambia mucho, o datos no relacionales (grafos, timeseries, documentos).</p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- TIPOS DE NOSQL -->
+  <div class="section-title">Tipos de Bases de Datos NoSQL</div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <span class="card-icon">📄</span>
+      <h3>Document (MongoDB, Firestore)</h3>
+      <p>Datos como documentos JSON. Flexible schema. Ideal para catálogos de productos, perfiles de usuario, CMS. Queries ricas dentro del documento.</p>
+      <span class="tag tag-green">Flexible schema</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🔑</span>
+      <h3>Key-Value (Redis, DynamoDB)</h3>
+      <p>La más simple y rápida. Key → Value. Ideal para caching, sesiones, leaderboards, contadores. Redis es in-memory con persistencia opcional.</p>
+      <span class="tag tag-blue">Ultra rápida</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">📊</span>
+      <h3>Wide-Column (Cassandra, HBase)</h3>
+      <p>Columnas por fila, no schema fijo. Diseñada para escrituras masivas y distribución global. Instagram, Netflix usan Cassandra. Excelente para timeseries.</p>
+      <span class="tag tag-orange">Escala masiva</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🕸️</span>
+      <h3>Graph (Neo4j, Neptune)</h3>
+      <p>Nodos y relaciones como estructura principal. Ideal para redes sociales, detección de fraude, sistemas de recomendación, knowledge graphs.</p>
+      <span class="tag tag-purple">Relaciones</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">📈</span>
+      <h3>Time Series (InfluxDB, TimescaleDB)</h3>
+      <p>Optimizada para datos con timestamp. IoT, métricas de infraestructura, analytics financiero. Compresión automática de datos históricos.</p>
+      <span class="tag tag-red">Métricas · IoT</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🔍</span>
+      <h3>Search (Elasticsearch, Typesense)</h3>
+      <p>Indexación invertida para full-text search. No es un DB principal, sino un complemento. Sincronizas datos desde tu DB principal.</p>
+      <span class="tag tag-blue">Full-text search</span>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- ACID vs BASE -->
+  <div class="section-title">ACID vs BASE</div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <span class="card-icon">🔒</span>
+      <h3>ACID (SQL)</h3>
+      <p><strong>Atomicity:</strong> La transacción es todo o nada.<br/>
+      <strong>Consistency:</strong> La DB pasa de un estado válido a otro.<br/>
+      <strong>Isolation:</strong> Las transacciones no se interfieren.<br/>
+      <strong>Durability:</strong> Una vez committed, persiste aunque falle el servidor.</p>
+      <span class="tag tag-blue">Garantía fuerte</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🌊</span>
+      <h3>BASE (NoSQL)</h3>
+      <p><strong>Basically Available:</strong> El sistema siempre responde.<br/>
+      <strong>Soft State:</strong> El estado puede cambiar con el tiempo.<br/>
+      <strong>Eventually Consistent:</strong> Los datos eventualmente son consistentes.</p>
+      <span class="tag tag-orange">Alta disponibilidad</span>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- SHARDING -->
+  <div class="section-title">Database Sharding</div>
+  <p class="section-subtitle">Partir la base de datos horizontalmente para escalar más allá de un solo servidor.</p>
+
+  <div class="diagram">  SIN SHARDING (un solo DB):
+  ┌──────────────────────┐
+  │   Users DB           │ ← Límite físico (~100M rows)
+  │   user_id 1..100M    │
+  └──────────────────────┘
+
+  CON SHARDING (múltiples DBs):
+  user_id % 3 == 0 → Shard 0    user_id % 3 == 1 → Shard 1    user_id % 3 == 2 → Shard 2
+  ┌────────────────┐             ┌────────────────┐             ┌────────────────┐
+  │  Shard 0       │             │  Shard 1       │             │  Shard 2       │
+  │  user 0,3,6... │             │  user 1,4,7... │             │  user 2,5,8... │
+  └────────────────┘             └────────────────┘             └────────────────┘</div>
+
+  <div class="section-title" style="font-size: 1.2rem; margin-top: 1.5rem;">Estrategias de Sharding</div>
+
+  <div class="concept-block">
+    <h4>🔢 Range-Based Sharding</h4>
+    <p>Shard 0: user_id 1-1M, Shard 1: 1M-2M. Simple, pero puede crear hot spots (todos los nuevos usuarios van al mismo shard).</p>
+  </div>
+  <div class="concept-block green">
+    <h4>#️⃣ Hash-Based Sharding</h4>
+    <p>shard = hash(user_id) % num_shards. Distribución uniforme. Problema: resharding es muy costoso si cambias el número de shards.</p>
+  </div>
+  <div class="concept-block purple">
+    <h4>🗺️ Directory-Based Sharding</h4>
+    <p>Un lookup service mantiene el mapa user_id → shard. Más flexible, puedes mover datos entre shards. Pero el lookup service es un SPOF.</p>
+  </div>
+  <div class="concept-block orange">
+    <h4>🔄 Consistent Hashing</h4>
+    <p>Los nodos y keys se mapean en un ring. Cuando agregas/quitas nodos, solo ~1/N de los datos se mueve. Solución al problema de resharding.</p>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <p><strong>Problemas del sharding:</strong> JOINs entre shards son costosos o imposibles. Transacciones cross-shard son complicadas. Resharding es una operación muy compleja. Solo shardea cuando realmente lo necesitas.</p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- REPLICACIÓN -->
+  <div class="section-title">Replicación</div>
+  <p class="section-subtitle">Copiar datos entre nodos para alta disponibilidad y mejor rendimiento en reads.</p>
+
+  <div class="diagram">  LEADER-FOLLOWER (Master-Replica):
+
+  [App]──Write──→[Leader DB]──sync──→[Follower 1]
+                             └──sync──→[Follower 2]
+  [App]──Read───→[Follower 1 or 2]
+
+  ✅ Simple de implementar
+  ✅ Reads escalan horizontalmente
+  ❌ Leader es SPOF para writes
+  ❌ Replication lag (eventual consistency para reads)
+
+  MULTI-LEADER:
+
+  [App Europe]──→[Leader EU]──sync──→[Leader USA]──→[App USA]
+  ✅ Writes en múltiples regiones
+  ❌ Conflictos de escritura simultánea
+
+  LEADERLESS (Cassandra, DynamoDB):
+  Write va a N nodos simultáneamente. Quorum: W + R > N
+  ✅ Máxima disponibilidad, sin SPOF
+  ❌ Mayor complejidad, eventual consistency</div>
+
+  <hr class="section-divider" />
+
+  <!-- INDEXING -->
+  <div class="section-title">Indexing</div>
+  <p class="section-subtitle">Estructuras de datos que aceleran las queries a costa de más storage y writes más lentos.</p>
+
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>🌳 B-Tree Index</h4>
+      <p>El más común. Excelente para range queries y equality queries. MySQL, PostgreSQL lo usan por default. O(log n) para reads y writes.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>#️⃣ Hash Index</h4>
+      <p>Solo para equality queries (WHERE id = 5). O(1) lookup. No sirve para range queries (WHERE id > 5). Usado en Redis internamente.</p>
+    </div>
+    <div class="concept-block purple">
+      <h4>📊 Columnar Storage</h4>
+      <p>Los datos se almacenan por columna, no por fila. Ideal para analytics (leer solo las columnas necesarias). Parquet, Redshift, BigQuery.</p>
+    </div>
+    <div class="concept-block orange">
+      <h4>🔍 Full-Text Index</h4>
+      <p>Inverted index: palabra → lista de documentos. Permite búsqueda por texto. Elasticsearch, PostgreSQL (tsvector), MySQL FULLTEXT.</p>
+    </div>
+  </div>
+
+  <pre><code><span class="cm">-- Crear index compuesto (muy útil)</span>
+<span class="kw">CREATE INDEX</span> idx_user_created
+<span class="kw">ON</span> posts(user_id, created_at <span class="kw">DESC</span>);
+
+<span class="cm">-- Esta query usará el index eficientemente</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> posts
+<span class="kw">WHERE</span> user_id = <span class="num">123</span>
+<span class="kw">ORDER BY</span> created_at <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> <span class="num">20</span>;</code></pre>
+
+  <hr class="section-divider" />
+
+  <!-- CHEAT SHEET DECISIÓN -->
+  <div class="section-title">Cheat Sheet — ¿Qué DB usar?</div>
+
+  <table>
+    <thead>
+      <tr><th>Necesidad</th><th>DB Recomendada</th><th>Ejemplos reales</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Usuario, órdenes, finanzas</td><td>PostgreSQL / MySQL</td><td>Shopify, GitHub, Airbnb</td></tr>
+      <tr><td>Sesiones, caché, rate limiting</td><td>Redis</td><td>Twitter, GitHub, Pinterest</td></tr>
+      <tr><td>Millones de escrituras/segundo</td><td>Cassandra</td><td>Instagram, Netflix, Discord</td></tr>
+      <tr><td>Documentos flexibles, CMS</td><td>MongoDB</td><td>eBay, Forbes, SEGA</td></tr>
+      <tr><td>Redes sociales, grafos</td><td>Neo4j / Neptune</td><td>LinkedIn, eBay fraud detection</td></tr>
+      <tr><td>Full-text search</td><td>Elasticsearch</td><td>Netflix, Uber, Airbnb</td></tr>
+      <tr><td>Métricas, IoT timeseries</td><td>InfluxDB / TimescaleDB</td><td>Tesla, IBM, CircleCI</td></tr>
+      <tr><td>Analytics, data warehouse</td><td>BigQuery / Redshift</td><td>Twitter, Airbnb, Square</td></tr>
+      <tr><td>Cloud-native, serverless</td><td>DynamoDB / Firestore</td><td>Lyft, Snap, Samsung</td></tr>
+    </tbody>
+  </table>
+
+  <hr class="section-divider" />
+
+  <!-- CONNECTION POOLING -->
+  <div class="section-title">Connection Pooling</div>
+  <p class="section-subtitle">Uno de los optimizaciones más impactantes y menos discutida en entrevistas. Crítico para cualquier sistema a escala.</p>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <p><strong>El problema:</strong> Abrir una conexión a PostgreSQL cuesta ~50ms y consume ~10MB de RAM en el servidor. Si tenés 100 instancias de tu app con 10 threads cada una, son 1,000 conexiones simultáneas a la DB. Postgres empieza a degradarse severamente con más de 200-300 conexiones.</p>
+  </div>
+
+  <div class="diagram">  SIN CONNECTION POOLING:
+
+  App Instance 1: [Thread 1 → DB conn] [Thread 2 → DB conn] [Thread 3 → DB conn]
+  App Instance 2: [Thread 1 → DB conn] [Thread 2 → DB conn] [Thread 3 → DB conn]
+  App Instance 3: [Thread 1 → DB conn] [Thread 2 → DB conn] [Thread 3 → DB conn]
+  → 9 conexiones para 3 instancias de 3 threads → 1000 instancias = 10,000 conexiones ❌
+
+  CON PGBOUNCER (Connection Pooler):
+
+  App Instance 1 ─┐
+  App Instance 2 ─┼──→ [PgBouncer] ──→ [PostgreSQL]
+  App Instance 3 ─┘    (mantiene pool   (solo 10-20 conex.
+  ...1000 instancias    de 20 conexiones  siempre activas)
+  (hasta 10,000         reutilizadas)
+  conexiones lógicas)
+
+  ✅ PostgreSQL ve solo 10-20 conexiones físicas
+  ✅ Las 1000 instancias comparten ese pool
+  ✅ Reducción de RAM en DB de 10GB → 200MB
+  ✅ Latencia menor (sin handshake de nueva conexión)</div>
+
+  <div class="grid grid-3">
+    <div class="concept-block">
+      <h4>PgBouncer</h4>
+      <p>El pooler estándar para PostgreSQL. Tres modos: Session (1 conn por sesión), Transaction (1 conn por transacción — el más eficiente), Statement. Usar modo Transaction para APIs REST sin estado.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>HikariCP (Java/JVM)</h4>
+      <p>El connection pool más rápido para JVM. Default en Spring Boot. Pool de conexiones in-process. Configurar: maximumPoolSize, connectionTimeout, idleTimeout. Muy bajo overhead.</p>
+    </div>
+    <div class="concept-block purple">
+      <h4>RDS Proxy (AWS)</h4>
+      <p>Managed connection pooler para RDS/Aurora. Sin operación de PgBouncer. Integrado con IAM para auth. Reduce conexiones abiertas drásticamente en Lambda/serverless.</p>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- NEWSQL -->
+  <div class="section-title">NewSQL — Lo mejor de los dos mundos</div>
+  <p class="section-subtitle">Bases de datos que combinan las garantías ACID de SQL con la escalabilidad horizontal de NoSQL.</p>
+
+  <div class="concept-block">
+    <h4>El gap que llenan</h4>
+    <p>SQL tradicional (PostgreSQL) escala verticalmente y es difícil de distribuir. NoSQL (Cassandra) escala horizontalmente pero sacrifica ACID. NewSQL da distribución geográfica, escalabilidad horizontal, y ACID completo.</p>
+  </div>
+
+  <div class="grid grid-3">
+    <div class="card">
+      <span class="card-icon">🌍</span>
+      <h3>Google Spanner</h3>
+      <p>El first-mover. Usa relojes atómicos (TrueTime) para garantizar consistencia global. Escala a nivel planetario. Usado internamente en Google AdWords. Disponible como Cloud Spanner en GCP.</p>
+      <span class="tag tag-blue">Cloud GCP</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🦀</span>
+      <h3>CockroachDB</h3>
+      <p>Open source. Inspirado en Spanner. PostgreSQL-compatible (mismos drivers, mismas queries). Multi-region nativo. Usado en Comcast, Bose, LaunchDarkly. Auto-sharding y rebalancing.</p>
+      <span class="tag tag-green">Open Source</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🐯</span>
+      <h3>TiDB</h3>
+      <p>MySQL-compatible. HTAP: puede hacer OLTP y OLAP en la misma base. Open source. Muy popular en Asia (PingCAP). TiKV para storage distribuido, TiFlash para analytics columnar.</p>
+      <span class="tag tag-orange">MySQL compatible</span>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>DB</th><th>Escala</th><th>Latencia</th><th>Compatible</th><th>Cuando usarlo</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>PostgreSQL</td><td>Hasta ~10TB</td><td>&lt;1ms local</td><td>SQL estándar</td><td>99% de los casos</td></tr>
+      <tr><td>Cassandra</td><td>Petabytes</td><td>~1ms</td><td>CQL</td><td>Escrituras masivas, IoT</td></tr>
+      <tr><td>CockroachDB</td><td>Exabytes</td><td>~5ms global</td><td>PostgreSQL</td><td>Multi-region + ACID</td></tr>
+      <tr><td>Google Spanner</td><td>Ilimitado</td><td>~10ms global</td><td>SQL + IA</td><td>Escala planetaria</td></tr>
+    </tbody>
+  </table>
+
+  <hr class="section-divider" />
+
+  <!-- ZERO-DOWNTIME MIGRATIONS -->
+  <div class="section-title">Database Migrations a Escala</div>
+  <p class="section-subtitle">Cómo hacer cambios al schema de producción con millones de filas sin downtime. Pregunta senior frecuente.</p>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <p><strong>El problema:</strong> <code>ALTER TABLE users ADD COLUMN phone VARCHAR(20) NOT NULL DEFAULT ''</code> en una tabla de 100M filas en PostgreSQL bloquea la tabla completa por minutos. Inaceptable en producción.</p>
+  </div>
+
+  <div class="diagram">  EXPAND-CONTRACT PATTERN (la solución estándar):
+
+  OBJETIVO: Renombrar columna "email" → "email_address"
+
+  PASO 1 — EXPAND (backward compatible):
+  ALTER TABLE users ADD COLUMN email_address VARCHAR(255);
+  ← Este ALTER es instantáneo (solo agrega columna NULL)
+  App escribe en AMBAS columnas: email y email_address
+  App lee de email (la vieja) — sin cambios al código de lectura
+
+  PASO 2 — BACKFILL (en background, sin lock):
+  UPDATE users SET email_address = email
+  WHERE email_address IS NULL
+  LIMIT 1000;  ← En batches pequeños para no bloquear
+  ← Correr en off-peak hours
+
+  PASO 3 — MIGRATE reads:
+  App ahora lee de email_address
+  Sigue escribiendo en ambas
+
+  PASO 4 — CONTRACT:
+  App solo escribe en email_address
+  ALTER TABLE users DROP COLUMN email;  ← Ahora es seguro
+
+  ─────────────────────────────────────────────────────────
+
+  AGREGAR INDEX SIN LOCK (PostgreSQL):
+
+  CREATE INDEX CONCURRENTLY idx_users_email ON users(email);
+  ↑ "CONCURRENTLY" — construye el índice en background
+    Puede tardar mucho más pero NO bloquea la tabla
+    Reads y writes siguen funcionando durante la creación</div>
+
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>Herramientas de Migration</h4>
+      <p><strong>Flyway/Liquibase:</strong> Versionado de migrations, rollback automático. Estándar en Java.<br/><strong>Alembic:</strong> Para SQLAlchemy (Python).<br/><strong>Sqitch:</strong> Agnóstico al lenguaje, git-like.<br/><strong>gh-ost (GitHub):</strong> Online Schema Change para MySQL. GitHub lo usa en tablas con miles de millones de filas.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>Reglas de Oro</h4>
+      <p>Siempre backward compatible — la vieja versión de la app debe seguir funcionando. Nunca renombres ni elimines en un solo step. Siempre usa CONCURRENTLY para nuevos índices en producción. Probar en staging con datos de volumen similar al de producción.</p>
+    </div>
+  </div>
+
+  <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+    <a class="card" href="../05-apis/index.html" style="flex: 1; min-width: 200px;">
+      <span class="card-icon">🔌</span>
+      <h3>Siguiente: APIs →</h3>
+      <p>REST, GraphQL, gRPC y rate limiting.</p>
+    </a>
+    <a class="card" href="../06-case-studies/index.html" style="flex: 1; min-width: 200px;">
+      <span class="card-icon">🔬</span>
+      <h3>Casos de Estudio →</h3>
+      <p>Aplica todo en sistemas reales.</p>
+    </a>
+  </div>
+
+</main>
+
+<footer>
+  <p>System Design Guide · <a href="../index.html">← Volver al inicio</a></p>
+</footer>
+
+</body>
+</html>

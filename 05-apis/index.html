@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>APIs — System Design Guide</title>
+  <link rel="stylesheet" href="../styles/main.css" />
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="../index.html">⚡ System<span>Design</span></a>
+  <div class="nav-links">
+    <a href="../01-fundamentals/index.html">Fundamentos</a>
+    <a href="../02-components/index.html">Componentes</a>
+    <a href="../03-patterns/index.html">Patrones</a>
+    <a href="../04-databases/index.html">Bases de Datos</a>
+    <a href="../05-apis/index.html" class="active">APIs</a>
+    <a href="../06-case-studies/index.html">Casos Reales</a>
+    <a href="../07-infrastructure/index.html">Infraestructura</a>
+    <a href="../08-interview-prep/index.html">Entrevistas</a>
+    <a href="../09-resources/index.html">Recursos</a>
+    <a href="../10-advanced-topics/index.html">Avanzado</a>
+    <a href="../11-security/index.html">🔐 Seguridad</a>
+    <a href="../12-search/index.html">🔍 Search</a>
+    <a href="../13-soft-skills/index.html">🎭 Soft Skills</a>
+    <a href="../14-leetcode/index.html">⚡ LeetCode</a>
+    <a href="../15-ai-engineering/index.html">🤖 AI Eng</a>
+    <a href="../16-token-optimization/index.html">🪙 Tokens</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / APIs</div>
+  <h1>🔌 Diseño de APIs</h1>
+  <p>REST, GraphQL, gRPC, WebSockets — cuándo usar cada uno y cómo diseñarlos correctamente.</p>
+</div>
+
+<main>
+
+  <!-- REST vs GraphQL vs gRPC -->
+  <div class="section-title">REST vs GraphQL vs gRPC</div>
+  <p class="section-subtitle">Las tres opciones principales para comunicación entre servicios.</p>
+
+  <table>
+    <thead>
+      <tr><th>Aspecto</th><th>REST</th><th>GraphQL</th><th>gRPC</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Protocolo</td><td>HTTP/1.1</td><td>HTTP/1.1</td><td>HTTP/2</td></tr>
+      <tr><td>Formato</td><td>JSON/XML</td><td>JSON</td><td>Protocol Buffers</td></tr>
+      <tr><td>Flexibilidad de query</td><td>Fija por endpoint</td><td>El cliente elige los campos</td><td>Definida en .proto</td></tr>
+      <tr><td>Performance</td><td>Buena</td><td>Buena</td><td>Excelente (binario)</td></tr>
+      <tr><td>Streaming</td><td>Limited (SSE)</td><td>Subscriptions</td><td>Nativo (bidireccional)</td></tr>
+      <tr><td>Curva de aprendizaje</td><td>Baja</td><td>Media</td><td>Alta</td></tr>
+      <tr><td>Browser support</td><td>✅ Nativo</td><td>✅ Nativo</td><td>❌ Necesita proxy</td></tr>
+      <tr><td>Mejor para</td><td>APIs públicas, CRUD</td><td>Mobile, dashboards complejos</td><td>Microservicios internos</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <div class="callout-icon">💡</div>
+    <p><strong>En una entrevista:</strong> Por default usa REST. Justifica GraphQL si el cliente necesita flexibilidad en qué datos pide. Justifica gRPC para comunicación interna entre microservicios donde la performance importa mucho.</p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- REST BEST PRACTICES -->
+  <div class="section-title">REST — Mejores Prácticas</div>
+
+  <div class="concept-block">
+    <h4>Diseño de URLs</h4>
+    <p>Usa sustantivos (no verbos). Usa plural. Usa kebab-case. Versiona con /v1.</p>
+  </div>
+  <pre><code><span class="cm"># ✅ Correcto</span>
+GET    /api/v1/users                    <span class="cm"># Listar usuarios</span>
+GET    /api/v1/users/{id}               <span class="cm"># Obtener usuario</span>
+POST   /api/v1/users                    <span class="cm"># Crear usuario</span>
+PUT    /api/v1/users/{id}               <span class="cm"># Reemplazar usuario completo</span>
+PATCH  /api/v1/users/{id}               <span class="cm"># Actualizar parcialmente</span>
+DELETE /api/v1/users/{id}               <span class="cm"># Eliminar</span>
+GET    /api/v1/users/{id}/orders        <span class="cm"># Órdenes de un usuario</span>
+
+<span class="cm"># ❌ Incorrecto</span>
+GET    /getUsers
+POST   /createUser
+GET    /api/users/getUserById?id=123</code></pre>
+
+  <div class="concept-block green">
+    <h4>HTTP Status Codes</h4>
+    <p>Usa los correctos — son parte del contrato de tu API.</p>
+  </div>
+  <pre><code><span class="cm"># 2xx — Éxito</span>
+<span class="num">200</span> OK            <span class="cm"># GET, PUT, PATCH exitosos</span>
+<span class="num">201</span> Created       <span class="cm"># POST que crea un recurso</span>
+<span class="num">204</span> No Content    <span class="cm"># DELETE exitoso</span>
+
+<span class="cm"># 4xx — Error del cliente</span>
+<span class="num">400</span> Bad Request   <span class="cm"># Input inválido</span>
+<span class="num">401</span> Unauthorized  <span class="cm"># No autenticado</span>
+<span class="num">403</span> Forbidden     <span class="cm"># Autenticado pero sin permiso</span>
+<span class="num">404</span> Not Found     <span class="cm"># Recurso no existe</span>
+<span class="num">409</span> Conflict      <span class="cm"># Conflicto (ej: email ya existe)</span>
+<span class="num">429</span> Too Many Reqs <span class="cm"># Rate limit exceeded</span>
+
+<span class="cm"># 5xx — Error del servidor</span>
+<span class="num">500</span> Internal Error <span class="cm"># Error no esperado</span>
+<span class="num">503</span> Unavailable    <span class="cm"># Servicio down (deploy, maintenance)</span></code></pre>
+
+  <hr class="section-divider" />
+
+  <!-- RATE LIMITING -->
+  <div class="section-title">Rate Limiting</div>
+  <p class="section-subtitle">Proteger tu API de abuso y garantizar fair use.</p>
+
+  <div class="diagram">  HEADERS DE RATE LIMITING (estándar de la industria):
+
+  Response Headers:
+  X-RateLimit-Limit: 100          ← Máximo requests por ventana
+  X-RateLimit-Remaining: 73       ← Requests restantes
+  X-RateLimit-Reset: 1609459200   ← Timestamp cuando se resetea
+
+  Cuando se excede el límite:
+  HTTP 429 Too Many Requests
+  Retry-After: 3600               ← Segundos para reintentar</div>
+
+  <div class="grid grid-2">
+    <div class="concept-block">
+      <h4>Por IP</h4>
+      <p>100 requests/hora por IP. Fácil de implementar pero fácil de evadir con proxies. Buen default para APIs públicas sin autenticación.</p>
+    </div>
+    <div class="concept-block green">
+      <h4>Por API Key / Usuario</h4>
+      <p>Diferentes límites por plan: Free = 100/hr, Pro = 1000/hr, Enterprise = ilimitado. El modelo de monetización de la mayoría de APIs comerciales.</p>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- AUTENTICACIÓN -->
+  <div class="section-title">Autenticación y Autorización</div>
+
+  <div class="concept-block">
+    <h4>🔑 API Keys</h4>
+    <p>Simple. El cliente incluye una key en el header: <code>Authorization: Bearer sk-abc123</code>. Ideal para server-to-server. No expiran automáticamente (deben rotarse manualmente). OpenAI, Stripe, SendGrid usan este modelo.</p>
+  </div>
+  <div class="concept-block green">
+    <h4>🎫 JWT (JSON Web Tokens)</h4>
+    <p>Token stateless con payload JSON firmado. El servidor no necesita almacenar sesiones. Contiene: header.payload.signature. Expira automáticamente (claim "exp"). Ideal para APIs de usuario. Riesgo: no se puede invalidar antes de expirar sin blocklist.</p>
+  </div>
+  <div class="concept-block purple">
+    <h4>🔐 OAuth 2.0</h4>
+    <p>El estándar para autorización delegada. "Login con Google/GitHub". El usuario autoriza a tu app a acceder a sus datos en otro servicio. Flujos: Authorization Code (web apps), Client Credentials (server-to-server), Device Code (smart TVs).</p>
+  </div>
+
+  <pre><code><span class="cm"># JWT Structure</span>
+header = base64({
+  <span class="str">"alg"</span>: <span class="str">"HS256"</span>,  <span class="cm"># Algoritmo de firma</span>
+  <span class="str">"typ"</span>: <span class="str">"JWT"</span>
+})
+
+payload = base64({
+  <span class="str">"sub"</span>: <span class="str">"user_123"</span>,    <span class="cm"># Subject (user ID)</span>
+  <span class="str">"iat"</span>: <span class="num">1609459200</span>,    <span class="cm"># Issued at</span>
+  <span class="str">"exp"</span>: <span class="num">1609545600</span>,    <span class="cm"># Expiration (24h)</span>
+  <span class="str">"roles"</span>: [<span class="str">"admin"</span>]   <span class="cm"># Claims adicionales</span>
+})
+
+signature = HMAC_SHA256(header + <span class="str">"."</span> + payload, secret_key)</code></pre>
+
+  <hr class="section-divider" />
+
+  <!-- WEBSOCKETS -->
+  <div class="section-title">WebSockets vs Server-Sent Events vs Polling</div>
+  <p class="section-subtitle">Para comunicación en tiempo real.</p>
+
+  <div class="diagram">  POLLING (el cliente pregunta repetidamente):
+  Client: "¿hay novedades?" (cada 5 segundos)
+  Server: "no"
+  Client: "¿hay novedades?"
+  Server: "no"
+  Client: "¿hay novedades?"
+  Server: "sí, aquí están"
+  ❌ Muy ineficiente, alto overhead
+
+  LONG POLLING:
+  Client: "¿hay novedades?" → Server espera hasta tener algo
+  (30 segundos después)
+  Server: "sí, aquí están" → Client inmediatamente vuelve a preguntar
+  ✅ Más eficiente que polling
+  ❌ Sigue siendo un request por respuesta
+
+  SERVER-SENT EVENTS (SSE):
+  Client → Server: GET /events (una sola vez)
+  Server → Client: data: {...} (cuando hay novedades)
+  Server → Client: data: {...}
+  ✅ Simple, unidireccional, reconnection automática
+  ❌ Solo server → client, no bidireccional
+
+  WEBSOCKETS:
+  Client ←──── TCP connection ────→ Server
+  Client → "mensaje"
+  Server → "respuesta"
+  Client → "otro mensaje"
+  ✅ Bidireccional, baja latencia
+  ❌ Más complejo, necesita manejo de conexión</div>
+
+  <table>
+    <thead>
+      <tr><th>Técnica</th><th>Dirección</th><th>Latencia</th><th>Caso de Uso</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Polling</td><td>→</td><td>Alta</td><td>Evitar si es posible</td></tr>
+      <tr><td>Long Polling</td><td>→</td><td>Media</td><td>Notificaciones simples (fallback)</td></tr>
+      <tr><td>SSE</td><td>Server→Client</td><td>Baja</td><td>Live feeds, dashboards, AI streaming</td></tr>
+      <tr><td>WebSockets</td><td>Bidireccional</td><td>Muy baja</td><td>Chat, juegos, colaboración real-time</td></tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+    <a class="card" href="../06-case-studies/index.html" style="flex: 1; min-width: 200px;">
+      <span class="card-icon">🔬</span>
+      <h3>Ver APIs en Casos Reales →</h3>
+      <p>Cómo se diseñan las APIs de Twitter, WhatsApp y más.</p>
+    </a>
+    <a class="card" href="../08-interview-prep/index.html" style="flex: 1; min-width: 200px;">
+      <span class="card-icon">🎯</span>
+      <h3>Prep Entrevistas →</h3>
+      <p>Cómo definir APIs en una entrevista de 45 min.</p>
+    </a>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- RESOURCE MODELING — HelloInterview -->
+  <div class="section-title">Resource Modeling — Modelar bien tus recursos</div>
+  <p class="section-subtitle">Basado en HelloInterview · Los recursos deben representar <em>cosas</em>, no acciones.</p>
+
+  <div class="callout">
+    <div class="callout-icon">💡</div>
+    <p><strong>Regla de oro:</strong> Los recursos son sustantivos (events, tickets, users), no verbos (getEvent, createTicket). Las acciones las expresas con los métodos HTTP.</p>
+  </div>
+
+  <div class="concept-block">
+    <h4>🔗 Path Parameters vs Query Parameters</h4>
+    <p>
+      <strong>Path parameters:</strong> Para identificadores obligatorios que definen el recurso.<br/>
+      <code>/events/{id}</code> → un evento específico<br/>
+      <code>/events/{eventId}/tickets/{ticketId}</code> → un ticket de un evento<br/><br/>
+      <strong>Query parameters:</strong> Para filtros opcionales, ordenamiento y paginación.<br/>
+      <code>/events?city=BuenosAires&amp;date=2024-12-01&amp;limit=20</code>
+    </p>
+  </div>
+
+  <pre><code><span class="cm"># ✅ API bien diseñada — estilo REST</span>
+GET    /api/v1/events                         <span class="cm"># Listar eventos con filtros</span>
+GET    /api/v1/events/{id}                    <span class="cm"># Un evento específico</span>
+POST   /api/v1/events                         <span class="cm"># Crear evento</span>
+PATCH  /api/v1/events/{id}                    <span class="cm"># Actualizar parcialmente</span>
+DELETE /api/v1/events/{id}                    <span class="cm"># Eliminar</span>
+GET    /api/v1/events/{id}/tickets            <span class="cm"># Tickets de un evento</span>
+POST   /api/v1/events/{id}/tickets/reserve    <span class="cm"># Acción especial (verbo OK aquí)</span>
+
+<span class="cm"># Request body para creación</span>
+POST /api/v1/events
+{
+  <span class="str">"title"</span>: <span class="str">"Lollapalooza 2025"</span>,
+  <span class="str">"venue_id"</span>: <span class="str">"venue_456"</span>,
+  <span class="str">"starts_at"</span>: <span class="str">"2025-03-28T14:00:00Z"</span>,
+  <span class="str">"capacity"</span>: <span class="num">50000</span>
+}</code></pre>
+
+  <hr class="section-divider" />
+
+  <!-- PAGINACIÓN -->
+  <div class="section-title">Paginación — Offset vs Cursor</div>
+  <p class="section-subtitle">Cómo devolver listas grandes de datos de forma eficiente. Basado en HelloInterview.</p>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <span class="card-icon">🔢</span>
+      <h3>Offset-based Pagination</h3>
+      <p>Salta N registros y devuelve los siguientes M.</p>
+      <pre style="margin-top:0.75rem"><code>GET /posts?offset=<span class="num">20</span>&amp;limit=<span class="num">10</span>
+
+SELECT * FROM posts
+ORDER BY created_at DESC
+LIMIT <span class="num">10</span> OFFSET <span class="num">20</span></code></pre>
+      <p style="margin-top:0.75rem; color: var(--accent2)">✅ Simple de implementar<br/>✅ Permite saltar a cualquier página</p>
+      <p style="color: var(--accent3)">❌ Inestable con datos en tiempo real (posts nuevos desplazan los resultados)<br/>❌ OFFSET grande es lento en la DB</p>
+    </div>
+    <div class="card">
+      <span class="card-icon">📍</span>
+      <h3>Cursor-based Pagination ⭐</h3>
+      <p>Usa un puntero opaco al último item. Más estable y eficiente.</p>
+      <pre style="margin-top:0.75rem"><code><span class="cm"># Primera página</span>
+GET /posts?limit=<span class="num">10</span>
+→ { data: [...], next_cursor: <span class="str">"eyJpZCI6MTIzfQ"</span> }
+
+<span class="cm"># Siguiente página</span>
+GET /posts?limit=<span class="num">10</span>&amp;cursor=<span class="str">"eyJpZCI6MTIzfQ"</span>
+
+SELECT * FROM posts
+WHERE id &lt; <span class="num">123</span>  <span class="cm">-- cursor decoded</span>
+ORDER BY id DESC LIMIT <span class="num">10</span></code></pre>
+      <p style="margin-top:0.75rem; color: var(--accent2)">✅ Estable con datos en tiempo real<br/>✅ Rendimiento constante (no OFFSET)<br/>✅ Ideal para feeds infinitos</p>
+      <p style="color: var(--accent3)">❌ No permite saltar a página arbitraria</p>
+    </div>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-icon">🎯</div>
+    <p><strong>En entrevistas:</strong> Si el sistema tiene datos que cambian frecuentemente (feeds, timelines), usa cursor-based. Para listados admin donde el usuario navega por páginas, offset está bien.</p>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- RBAC -->
+  <div class="section-title">Autorización — RBAC (Role-Based Access Control)</div>
+  <p class="section-subtitle">Restringir endpoints según el rol del usuario. Patrón estándar en la industria.</p>
+
+  <div class="diagram">  RBAC — Roles y Permisos:
+
+  ┌─────────────────────────────────────────────────────┐
+  │  User (autenticado)                                  │
+  │  → GET /events           ✅ Permitido               │
+  │  → POST /events          ❌ Denegado (403)          │
+  │  → GET /events/{id}      ✅ Permitido               │
+  │  → DELETE /events/{id}   ❌ Denegado (403)          │
+  └─────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────┐
+  │  Manager                                             │
+  │  → GET /events           ✅ Permitido               │
+  │  → POST /events          ✅ Permitido               │
+  │  → PATCH /events/{id}    ✅ Solo sus propios eventos│
+  │  → DELETE /events/{id}   ❌ Solo admin              │
+  └─────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────┐
+  │  Admin                                               │
+  │  → Todos los endpoints   ✅ Acceso total            │
+  └─────────────────────────────────────────────────────┘</div>
+
+  <pre><code><span class="cm"># RBAC Middleware (FastAPI)</span>
+<span class="kw">from</span> functools <span class="kw">import</span> wraps
+
+<span class="kw">def</span> <span class="fn">require_role</span>(*roles):
+    <span class="kw">def</span> decorator(func):
+        @wraps(func)
+        <span class="kw">async def</span> <span class="fn">wrapper</span>(*args, current_user=Depends(get_current_user), **kwargs):
+            <span class="kw">if</span> current_user.role <span class="kw">not in</span> roles:
+                <span class="kw">raise</span> HTTPException(status_code=<span class="num">403</span>, detail=<span class="str">"Forbidden"</span>)
+            <span class="kw">return await</span> func(*args, current_user=current_user, **kwargs)
+        <span class="kw">return</span> wrapper
+    <span class="kw">return</span> decorator
+
+@app.post(<span class="str">"/events"</span>)
+@require_role(<span class="str">"manager"</span>, <span class="str">"admin"</span>)
+<span class="kw">async def</span> <span class="fn">create_event</span>(event: EventCreate, current_user=Depends(get_current_user)):
+    <span class="kw">return</span> event_service.create(event, owner=current_user)</code></pre>
+
+  <hr class="section-divider" />
+
+  <!-- IDEMPOTENCIA -->
+  <div class="section-title">Idempotencia en APIs</div>
+  <p class="section-subtitle">Garantizar que el mismo request repetido produzca el mismo resultado. Crítico para pagos.</p>
+
+  <div class="concept-block">
+    <h4>¿Qué métodos son idempotentes?</h4>
+    <p>
+      <strong>GET, PUT, DELETE:</strong> Idempotentes. Puedes repetirlos sin efectos secundarios.<br/>
+      <strong>POST:</strong> NO es idempotente. Cada llamada puede crear un nuevo recurso.<br/>
+      <strong>PATCH:</strong> Depende de la implementación.
+    </p>
+  </div>
+
+  <div class="concept-block green">
+    <h4>Idempotency Key — Para operaciones críticas</h4>
+    <p>El cliente genera un UUID único y lo envía en el header. Si el servidor ya procesó ese ID, devuelve la respuesta cacheada sin re-procesar. Stripe, PayPal y todos los procesadores de pago lo usan.</p>
+  </div>
+
+  <pre><code><span class="cm"># El cliente genera un UUID único por intento</span>
+POST /api/v1/payments
+Idempotency-Key: <span class="str">"a1b2c3d4-e5f6-7890-abcd-ef1234567890"</span>
+{
+  <span class="str">"amount"</span>: <span class="num">9999</span>,
+  <span class="str">"currency"</span>: <span class="str">"ARS"</span>
+}
+
+<span class="cm"># Si el cliente reintenta (timeout, error de red), el servidor</span>
+<span class="cm"># detecta que ese Idempotency-Key ya fue procesado y devuelve</span>
+<span class="cm"># la misma respuesta sin cobrar dos veces</span></code></pre>
+
+  <div class="callout">
+    <div class="callout-icon">🎯</div>
+    <p><strong>Insight de HelloInterview:</strong> "Most interviewers don't care deeply about your API design being perfect. Spend ~5 minutes on APIs and focus energy on complex architectural challenges." Definí los endpoints principales y seguí con el diseño del sistema.</p>
+  </div>
+
+</main>
+
+<footer>
+  <p>System Design Guide · <a href="../index.html">← Volver al inicio</a></p>
+</footer>
+
+</body>
+</html>
